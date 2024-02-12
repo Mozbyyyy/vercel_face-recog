@@ -6,8 +6,8 @@ services:
       - .:/app
     ports:
       - 8000:8000
-    image: facerecog:latest
-    container_name: facedetection-dtr
+    image: app:app
+    container_name: django_container
     command: python manage.py runserver 0.0.0.0:8000
 
 

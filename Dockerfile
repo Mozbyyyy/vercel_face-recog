@@ -1,6 +1,7 @@
 FROM python:3.11-slim-buster
 
-RUN apt-get update && apt-get install -y \
+RUN apt-get update
+RUN apt-get install -y \
     cmake \
     make \
     gcc \
@@ -14,12 +15,12 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 
-#COPY requirements.txt requirements.txt
+COPY requirements.txt requirements.txt
 
 
-# RUN pip3 install --no-cache-dir -r requirements.txt
+RUN pip3 install --no-cache-dir -r requirements.txt
 
-# COPY . .
+COPY . .
 
 
 CMD ["gunicorn", "--bind", "0.0.0.0:8000", "myproject.wsgi"]
