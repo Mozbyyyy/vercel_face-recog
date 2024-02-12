@@ -109,7 +109,7 @@
         <form id="droneForm" class="RadioButton">
             <fieldset>
                 <div>
-                    <input type="radio" id="louie" name="drone" value="Csrd" checked onchange="updateSelectedKey(this)" />
+                    <input type="radio" id="louie" name="drone" value="Csrd" onchange="updateSelectedKey(this)" />
                     <label for="louie">CSRD</label>
                 </div>
                 <div>
@@ -130,7 +130,7 @@
                     <label for="louie">MANAGEMENT</label>
                 </div>
                 <div>
-                    <input type="radio" id="louie" name="drone" value="C&C" onchange="updateSelectedKey(this)" />
+                    <input type="radio" id="louie" name="drone" value="CC" onchange="updateSelectedKey(this)" />
                     <label for="louie">CREDIT&CO</label>
                 </div>
                 
@@ -184,15 +184,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {% comment %} {% for attendance in attendances|slice:":10"  %}
-                                    <tr>
-                                        <td class="fs-small fw-semi-bold ">{{ attendance.name }}</td>
-                                        <td class="fs-small fw-semi-bold">{{ attendance.timein }}</td>
-                                        <td class="fs-small fw-semi-bold ">{{ attendance.breakout }}</td>
-                                        <td class="fs-small fw-semi-bold">{{ attendance.breakin }}</td>
-                                        <td class="fs-small fw-semi-bold ">{{ attendance.timeout }}</td>
-                                    </tr>
-                                    {% endfor %} {% endcomment %}
+                                  
                                 </tbody>
                             </table>
                         </div>
@@ -207,14 +199,15 @@
     </div>
 
     <script>
+        function getcsrf(){
+            return document.cookie.match(/csrftoken=([^;]+)/)[1];
+        }
         function updateSelectedKey(radioButton) {
-            var selectedKey = radioButton.value;
-        
-            // Get CSRF token from cookie
-            var csrftoken = document.cookie.match(/csrftoken=([^;]+)/)[1];
-        
-            console.log("Selected key before AJAX request:", selectedKey);
-        
+            const selectedKey = radioButton.value;
+    
+            let csrftoken = getcsrf();
+    
+         
             $.ajax({
                 type: "POST",
                 url: "/update_selected_key/",
@@ -225,79 +218,53 @@
                     "X-CSRFToken": csrftoken
                 },
                 success: function (response) {
-                    console.log("Selected key updated successfully");
-        
-                    // Refresh the video stream for the selected key
-                    var videoStream = document.getElementById("videoElement");
-                    videoStream.src = "/camera_feed/?selected_key=" + selectedKey;
+    
+                    localStorage.setItem('selected_key', selectedKey);
+    
+                    location.reload(true);
                 },
                 error: function (error) {
                     console.error("Error updating selected key", error);
                 }
             });
         }
-    </script>
     
-  
 
-    <script>
-
-        function updateEarlyEmployeeCount(){
-            fetch('/employee_early/')
-                .then(response => response.json())
-                .then(data => {document.getElementById('earlyEmployeeCount').innerText = data.early_employees;
-                
-                });
-        }
-
-        updateEarlyEmployeeCount();
-
-        setInterval(updateEarlyEmployeeCount, 1000);
-
+        document.addEventListener("DOMContentLoaded", function () {
+            const selectedKey = localStorage.getItem('selected_key');
+            const $radioButton =  $('input[name=drone][value=' + selectedKey + ']');
+            if (selectedKey) {
+    
+               $radioButton.prop('checked', true);
+            }
+        });
     </script>
 
-
     <script>
-        function updateLateEmployeeCount() {
-            fetch('/employee_late/')
+        function updateEmployeeCount(endpoint, targetElementId) {
+            const targetElement = document.getElementById(targetElementId);
+        
+            fetch(endpoint)
                 .then(response => response.json())
                 .then(data => {
-                    document.getElementById('lateEmployeeCount').innerText = data.late_employees;
-                });
-        }
-    
-
-        updateLateEmployeeCount();
-    
-  
-        setInterval(updateLateEmployeeCount, 1000);  
-    </script>
-
-
-    
-    <script>
-
-        
-        
-
-        function updateEmployeeCount() {
-            fetch('/employee_count/')
-                .then(response => response.json())
-                .then(data => {
-                    const employeeCountElement = document.getElementById('employeeCount');
-                   
-                    if (parseInt(data.total_employees_count) > parseInt(employeeCountElement.innerText)) {
-                        document.getElementById('employeeCount').innerText = data.total_employees_count;                        
-                       
+                    if (parseInt(data.total_employees_count) > parseInt(targetElement.innerText)) {
+                        targetElement.innerText = data.total_employees_count;
                     }
-                   
                 });
         }
-
-      
-        updateEmployeeCount();
-
-        setInterval(updateEmployeeCount, 1000);  
+        
+        const earlyEmployeeElement = document.getElementById('earlyEmployeeCount');
+        const lateEmployeeElement = document.getElementById('lateEmployeeCount');
+        const employeeCountElement = document.getElementById('employeeCount');
+        
+        updateEmployeeCount('/employee_early/', 'earlyEmployeeCount');
+        updateEmployeeCount('/employee_late/', 'lateEmployeeCount');
+        updateEmployeeCount('/employee_count/', 'employeeCount');
+        
+        setInterval(() => updateEmployeeCount('/employee_early/', 'earlyEmployeeCount'), 1000);
+        setInterval(() => updateEmployeeCount('/employee_late/', 'lateEmployeeCount'), 1000);
+        setInterval(() => updateEmployeeCount('/employee_count/', 'employeeCount'), 1000);
+        
     </script>
 
 
@@ -311,7 +278,7 @@
 
 
                 toastr.options = {
-                    positionClass: 'toast-top-left',
+                    positionClass: 'toast-top-right',
                     preventDuplicates: false,
                     progressBar: true,
                     showDuration: 1000,
@@ -350,15 +317,33 @@
         
                         // Clear previous table data
                         tableBody.empty();
-        
+
+                        
+
                         data.attendances.forEach(function (attendance) {
                             // Create a new table row for each attendance entry
                             var row = $('<tr>');
                             row.append('<td>' + attendance.name + '</td>');
-                            row.append('<td>' + attendance.timein + '</td>');
-                            row.append('<td>' + attendance.breakout + '</td>');
-                            row.append('<td>' + attendance.breakin + '</td>');
-                            row.append('<td>' + attendance.timeout + '</td>');
+                            if (attendance.absent == 'Absent AM' || attendance.absent == 'Absent') {
+                                row.append('<td>Absent</td>');
+                            } else {
+                                row.append('<td>' +  attendance.timein + '</td>');
+                            }
+                            if (attendance.absent == 'Absent AM' || attendance.absent == 'Absent') {
+                                row.append('<td>Absent</td>');
+                            } else {
+                                row.append('<td>' +  attendance.breakout + '</td>');
+                            }
+                            if (attendance.absent == 'Absent PM' || attendance.absent == 'Absent') {
+                                row.append('<td>Absent</td>');
+                            } else {
+                                row.append('<td>' + attendance.breakin + '</td>');
+                            }
+                            if (attendance.absent == 'Absent PM' || attendance.absent == 'Absent') {
+                                row.append('<td>Absent</td>');
+                            } else {
+                                row.append('<td>' + attendance.timeout + '</td>');
+                            }
                             tableBody.append(row);
                         });
         
@@ -381,7 +366,9 @@
         }
 
         setInterval(updateAttendance, 100);
-    </script> 
+    </script>
+
+    
 
 {% endblock content %}
 

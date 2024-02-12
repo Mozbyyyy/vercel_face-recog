@@ -1,0 +1,27 @@
+{% extends "temp_myapp/base.html" %}
+{% load static %}
+
+
+
+{% block content %}
+{% include 'temp_myapp/navbar.html' %}
+
+   
+<link rel="stylesheet" type="text/css" href="{% static 'css/print.css' %}"> 
+
+
+<div id="printedData"></div>
+
+<script>
+    // Retrieve data from localStorage and display it
+    var printedData = localStorage.getItem('printData');
+    document.getElementById('printedData').innerHTML = printedData;
+
+    // Trigger the print window after the page has loaded
+    window.onload = function() {
+        window.print();
+    };
+</script>
+
+
+{% endblock content %}

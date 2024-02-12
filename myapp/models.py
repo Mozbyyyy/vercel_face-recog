@@ -1,5 +1,3 @@
-# Create your models here.
-
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from django.utils.text import slugify
@@ -36,10 +34,6 @@ class Employee(models.Model):
     EmployementDate = models.DateField(default=date(2000, 1, 1))
     EmploymentStatus = models.CharField(max_length=15,default="Regular")
     EmpImage = models.ImageField(upload_to='emp_image/', null=True, blank=True)
-  
-    
-    
-
    
 
 class RequestForm(models.Model):
@@ -76,11 +70,15 @@ class DailyRecord(models.Model):
     totallateness = models.CharField(default='00:00', max_length=50)
     latecount = models.CharField(default = '0', max_length = 6)
     totalundertime = models.CharField(default='00:00',max_length= 8)
-    totalovertime = models.CharField(default='00:00', max_length= 8)
+    totalovertime = models.CharField(default='00:00:00', max_length= 8)
     created_at = models.DateTimeField(default=timezone.now)  
     approveOT = models.BooleanField(default=False)
+    late = models.CharField(default = "None", max_length = 10)
+    absent = models.CharField(default = "None", max_length = 10)
+    remarks =models.CharField(default = "None", max_length = 30)
     class Meta:
         db_table = 'attendance'
+        get_latest_by = 'date'
 
 
 
@@ -107,33 +105,11 @@ class EmployeeStatus(models.Model):
     # DailyRecord = models.ForeignKey(DailyRecord, on_delete=models.CASCADE, to_field= 'ID', null=True)
     RequestForm = models.ForeignKey(RequestForm, on_delete=models.CASCADE, to_field= 'FormID', null=True) 
     RequestDate = models.DateField(default=date(2000, 1, 1))
+    totallateness = models.FloatField(default = 00)
+    totalabsent = models.FloatField(default = 00)
+    totalundertime = models.FloatField(default = 00)
+    totalovertime = models.FloatField(default = 00)
 
-
-# class PSPMI(models.Model):
-#     id = models.AutoField(unique= True, primary_key=True)
-#     id_num = models.IntegerField()
-#     fname = models.CharField(max_length=20, null = True, blank = True, default = "N/A")
-#     app_id = models.CharField(max_length=20, null = True, blank = True, default = "N/A")
-#     mname = models.CharField(max_length=20, null = True, blank = True, default = "N/A")
-#     lname = models.CharField(max_length=20, null = True, blank = True, default = "N/A")
-#     company = models.CharField(max_length=20, null = True, blank = True, default = "N/A")
-#     blood_type = models.CharField(max_length=20, null = True, blank = True, default = "N/A")
-#     birth_date = models.CharField(max_length=20, null = True, blank = True, default = "N/A")
-#     home_address = models.CharField(max_length=20, null = True, blank = True, default = "N/A")
-#     sss_num = models.CharField(max_length=20, null = True, blank = True, default = "N/A")
-#     tin_num = models.CharField(max_length=20, null = True, blank = True, default = "N/A")
-#     phil_num = models.CharField(max_length=20, null = True, blank = True, default = "N/A")
-#     pagibig_num = models.CharField(max_length=20, null = True, blank = True, default = "N/A")
-#     date_hired = models.CharField(max_length=20, null = True, blank = True, default = "N/A")
-#     em_fname = models.CharField(max_length=20, null = True, blank = True, default = "N/A")
-#     em_mname = models.CharField(max_length=20, null = True, blank = True, default = "N/A")
-#     em_lname = models.CharField(max_length=20, null = True, blank = True, default = "N/A")
-#     em_phone = models.CharField(max_length=20, null = True, blank = True, default = "N/A")
-#     em_address = models.CharField(max_length=20, null = True, blank = True, default = "N/A")
-#     picture = models.CharField(max_length=20, null = True, blank = True, default = "N/A")
-#     status = models.CharField(max_length=20, null = True, blank = True, default = "N/A")
-#     class Meta:
-#         db_table = 'PSPMI'
 
         
             

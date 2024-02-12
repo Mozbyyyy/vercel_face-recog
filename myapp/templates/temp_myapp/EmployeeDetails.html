@@ -69,7 +69,7 @@
                   </div>
 
                   <div class="Values5">
-                      <h3 class="fw-bold fs-medium">Undertime Count</h3>
+                      <h3 class="fw-bold fs-medium">Undertime</h3>
                       <h5 class="fw-extra-bold fs-tertiary details-value">{{total_undertime_sum}}</h5>
                   </div>
 
@@ -141,51 +141,64 @@
                                                   </tr>
                                               </thead>
                                               <tbody>
-                                                  {% for attendance in attendance_records %}
-                                                  <tr>
-              
-                                                      <td>{{ attendance.date }}</td>
-                                                      <td>{{ attendance.timein|default_if_none:"00:00:00"|time:"H:i:s" }}</td>
-                                                      <td>{{ attendance.breakout|default_if_none:"00:00:00"|time:"H:i:s" }}</td>
-                                                      <td>{{ attendance.breakin|default_if_none:"00:00:00"|time:"H:i:s" }}</td>
-                                                      <td>{{ attendance.timeout|default_if_none:"00:00:00"|time:"H:i:s" }}</td>
-                                                      <td class="{% if attendance.approveOT %}approved-cell{% else %}not-approved-cell{% endif %}">
+                                                {% for attendance in attendance_records %}
+                                                    <tr class="{% if attendance.absent == 'Absent AM' or attendance.absent == 'Absent PM' or attendance.absent == 'Absent' %}absent-row{% endif %}">
+                                                    <td>{{ attendance.date }}</td>
+                                                    <td>
+                                                          {% if attendance.absent == 'Absent AM' or attendance.absent == 'Absent' %}
+                                                            Absent
+                                                          {% else %}
+                                                            {{ attendance.timein|default_if_none:"00:00:00"|time:"H:i:s" }}
+                                                          {% endif %}
+                                                    </td>
+                                                    <td>
+                                                          {% if attendance.absent == 'Absent AM' or attendance.absent == 'Absent' %}
+                                                            Absent
+                                                          {% else %}
+                                                            {{ attendance.breakout|default_if_none:"00:00:00"|time:"H:i:s" }}
+                                                          {% endif %}
+                                                    </td>
+                                                    <td>
+                                                        {% if attendance.absent == 'Absent PM' or attendance.absent == 'Absent'%}
+                                                            Absent
+                                                        {%else%}
+                                                            {{ attendance.breakin|default_if_none:"00:00:00"|time:"H:i:s" }}
+                                                        {%endif%}
+                                                    </td>
+                                                    <td>
+                                                        {%if attendance.absent == 'Absent PM' or attendance.absent == 'Absent'%}
+                                                            Absent
+                                                        {%else%}
+                                                            {{ attendance.timeout|default_if_none:"00:00:00"|time:"H:i:s" }}
+                                                        {%endif%}
+                                                    </td>
+                                                    <td class="{% if attendance.approveOT %}approved-cell{% else %}not-approved-cell{% endif %}">
                                                         {% if attendance.approveOT %}
-                                                        <h6 class="StatusStyle-approved fs-small fw-bold">Approved</h6>
+                                                            <h6 class="StatusStyle-approved fs-small fw-bold">Approved</h6>
                                                         {% else %}
-                                                        <h6 class="StatusStyle-denied fs-small fw-bold">No-Request</h6>
+                                                            <h6 class="StatusStyle-denied fs-small fw-bold">No-Request</h6>
                                                         {% endif %}
-                                                      </td>
-                                                      <td>
-                                                          {% comment %} <span class="material-symbols-outlined btn btn-success" >
-                                                              wysiwyg
-                                                              </span> {% endcomment %}
-                                                              
+                                                    </td>
+                                                    <td>
                                                         <span class="material-symbols-outlined btn btn-edit edit-btn" data-bs-toggle="modal" data-bs-target="#updateEmployeeModal_{{user.EmpCode}}"  data-empcode="{{ user.EmpCode }}"
-                                                         data-date="{{ attendance.date }}"
-                                                         data-timein="{{ attendance.timein }}"
-                                                         data-breakout="{{ attendance.breakout }}"
-                                                         data-breakin="{{ attendance.breakin }}"
-                                                         data-timeout="{{ attendance.timeout }}"
-                                                         data-approveot="{{ attendance.approveOT }}"
-                                                         >
-                                                              edit
-                                                              </span>
-                                                       
-              
+                                                            data-date="{{ attendance.date }}"
+                                                            data-timein="{{ attendance.timein }}"
+                                                            data-breakout="{{ attendance.breakout }}"
+                                                            data-breakin="{{ attendance.breakin }}"
+                                                            data-timeout="{{ attendance.timeout }}"
+                                                            data-approveot="{{ attendance.approveOT }}">
+                                                            edit
+                                                        </span>
                                                         <span class="material-symbols-outlined btn btn-delete delete-btn"
-                                                              data-bs-toggle="modal"
-                                                              data-bs-target="#deleteEmployeeModal_{{ user.EmpCode }}"
-                                                              data-empcode="{{ user.EmpCode }}"
-                                                              data-date="{{ attendance.date }}">
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#deleteEmployeeModal_{{ user.EmpCode }}"
+                                                            data-empcode="{{ user.EmpCode }}"
+                                                            data-date="{{ attendance.date }}">
                                                             delete
                                                         </span>
-                                                        
-              
-                                                              
-                                                      </td>
-              
-                                                  </tr>
+                                                    </td>
+                                                </tr>
+                                            
                                         
                                           
                                       </div>

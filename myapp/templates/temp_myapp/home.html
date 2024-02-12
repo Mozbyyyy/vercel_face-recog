@@ -1,4 +1,5 @@
 {% extends "temp_myapp/base.html" %}
+{% load static %}
 
 
 
@@ -6,8 +7,750 @@
 {% include 'temp_myapp/navbar.html' %}
 
    
+<link rel="stylesheet" type="text/css" href="{% static 'css/home.css' %}"> 
 
 
+<div class= "Home-Wrapper"> 
 
+    <div class = "Dashboard"> 
+
+        <div class = "Element1 Layout">
+            <div class = "nontext-insight"> 
+                <img src="{% static 'images/runninglate.png' %}" alt="Your Image Alt Text">
+                <button onclick="openModal('lateEmployeesModal')" class = "View-button fw-bold fs-small">view</button>
+            </div>    
+
+            <div class="text-insight">
+                <h3>{{latecount}}</h3>
+                <h5>Daily Total Late</h5>
+            </div>
+
+
+          
+        </div>
+        <div class = "Element2 Layout">
+            <div class = "nontext-insight"> 
+                <img src="{% static 'images/absence.png' %}" alt="Your Image Alt Text">
+                <button onclick="openModal('absentEmployeesModal')" class = "View-button fw-bold fs-small">view</button>
+            </div>    
+
+            <div class = "text-insight"> 
+
+                <h3>{{absentcount}}</h3>
+                <h5>Daily Total Absent</h5>
+
+            </div>
+            
+        </div>
+        <div class = "Element3 Layout">
+            <div class = "nontext-insight"> 
+                <img src="{% static 'images/Ut.png' %}" alt="Your Image Alt Text">
+                <button onclick="openModal('breakinoutEmployeesModal')" class = "View-button fw-bold fs-small">view</button>
+            </div>    
+
+            <div class = "text-insight"> 
+
+                <h3>{{breakinbreakoutcount}}</h3>
+                <h5>No Br-IN/Br-OUT</h5>
+
+            </div>
+            
+        </div>
+        <div class = "Element4 Layout">
+            <div class = "nontext-insight"> 
+                <img src="{% static 'images/overtime.png' %}" alt="Your Image Alt Text">
+                <button onclick="openModal('employeeovertimeModal')" class = "View-button fw-bold fs-small">view</button>
+            </div>    
+
+            <div class = "text-insight"> 
+
+                <h3>{{employeeovertimecount}}</h3>
+                <h5>Daily Total OT</h5>
+
+            </div>
+            
+        </div>
+
+    </div>
+
+<div class="Trial">
+    <div class="Overall-Employee">
+        <h1 class="fs-tertiary fw-regular">Employee Daily Records</h1>
+    
+            <form id="filterForm" onsubmit="submitForm(event)">
+                {% csrf_token %}
+                <div class="list-filter">
+                    <input type="text" id="search" name="search" class="search fs-small fw-semi-bold" placeholder="Search">
+                    
+                    <select id="branch" name="branches" class="branch-list fs-small">
+                        <option value="ALL">All</option>
+                        {% for branch in branches %}
+                        <option value="{{ branch.BranchCode }}" {% if branch.BranchCode == user.BranchCode_id %}selected{% endif %}>
+                            {{ branch.BranchCode }}
+                        </option>
+                    {% endfor %}
+                    </select>
+                <div class="DateRange">
+                    <input class= "fs-small" type="date" id="start_date" name="dateStart">
+                    
+                    <input class= "fs-small" type="date" id="end_date" name="endDate">
+                </div>    
+                    <button type="submit" class="submit-button fs-small fw-bold">Submit</button>
+                </div>
+            </form>
+        <div class="line"></div>
+    
+        <div class="content-wrapper overallemployee-record-container">
+            <div class="container-fluid">
+    
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="card">
+                            <div class="card-body">
+    
+                                <div id="employee-list-container" class="table-responsive">
+                                    <table id="defaultdatatable" class="table table-bordered table-hover table-striped tables">
+                                        <thead>
+                                            <tr>
+                                                <th>Branch</th>
+                                                <th>Fullname</th>
+                                                <th>Worked</th>
+                                                <th>Late</th>
+                                                <th>Absent</th>
+                                                <th>Undertime</th>
+                                                <th>Overtime</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                    
+                                        </tbody>
+                                    </table>
+                                </div>
+
+             
+                                
+                            </div>
+                        </div>
+                    </div>
+                </div> <!-- row -->
+
+            </div> <!-- container-fluid -->
+
+        </div>
+        
+        <div class = "For-Overall-att-button">
+            <button class = "att-button export fs-small fw-bold"  onclick="printDailyEmployeesList('Daily Record', '<tr class=\'fs-medium fw-semi-bold\'><th>Name</th><th>Timein</th><th>Breakout</th><th>Breakin</th><th>Timeout</th></tr>')">Print Daily Records</button>
+            <button class = "att-button export fs-small fw-bold">Print</button>
+    </div>
+    </div>
+
+<div class="Individual-Employee" id='IndividualEmp'>
+    <div class="Profile-Container">
+            <div class="Profile">
+                <h6 class="fs-medium fw-bold" id="workedHours"></h6>
+                <h6 class="fs-small fw-semi-bold">Hrs Worked</h6>
+            </div>
+            <div>
+                <h5 class="fs-medium fw-bold" id="empCode"></h5>
+                <h5 class="fs-medium fw-semi-bold name" id="empName"></h5>
+            </div>
+        </div>
+    
+        <div class="discrepancy">
+            <h5 class="fs-small">Attendance Discrepancies</h5>
+    
+            <div class="Discrepancy-list">
+                <div class="Disc1">
+                    <h6 class="text-line fs small fw-regular">Late</h6>
+                    <h5 class="fs-small fw-bold" id="lateHours"></h5>
+                </div>
+                <div class="Disc1">
+                    <h6 class="text-line fs small fw-regular">Undertime</h6>
+                    <h5 class="fs-small fw-bold" id="undertimeHours"></h5>
+                </div>
+                <div class="Disc1">
+                    <h6 class="text-line fs small fw-regular">Absent</h6>
+                    <h5 class="fs-small fw-bold" id="absentDays"></h5>
+                </div>
+                <div class="Disc1">
+                    <h6 class="text-line fs small fw-regular">Overtime</h6>
+                    <h5 class="fs-small fw-bold" id="overtime"></h5>
+                </div>
+            </div>
+        </div>
+    
+        <div class="discrepancy">
+            <h5 class="fs-small">Employee Respite</h5>
+    
+            <div class="Discrepancy-list">
+                <div class="Disc1">
+                    <h6 class="text-line fs small fw-regular">Sick</h6>
+                    <h5 class="fs-small fw-bold" id="sickDays"></h5>
+                </div>
+                <div class="Disc1">
+                    <h6 class="text-line fs small fw-regular">Vacation</h6>
+                    <h5 class="fs-small fw-bold" id="vacationDays"></h5>
+                </div>
+                <div class="Disc1">
+                    <h6 class="text-line fs small fw-regular">Grace</h6>
+                    <h5 class="fs-small fw-bold" id="graceMinutes"></h5>
+                </div>
+            </div>
+        </div>
+    
+        <div class="For-Individual-att-button">
+
+            <form action="" method="post" class="d-flex">
+                {% csrf_token %}
+                <h5 class="fs-medium fw-bold" id="empCode" hidden></h5>
+                <button id="viewAttendanceButton" class="att-button view fs-small fw-bold" name ="ViewAttendance">View Attendance</button>
+            </form>
+            
+            <button class="att-button export fs-small fw-bold">Print</button>
+        </div>
+    </div>
+</div>
+
+</div>
+
+<!-- your_template.html -->
+<div id="lateEmployeesModal" class="modal Dashboard-modal modal-exit">
+    <div class="modal-content Dashboard-Content-modal">
+
+        <div class="Modal-Header">
+        <h4 class = " fs-medium fw-bold">Late Employee List <span>(Total: {{ latecount }})</span></h4>
+        <div class ="close-button"><button class= "btn-close-modal-dashboard fs-small">Close</button></div>
+        </div>
+
+        <table class="Dashboard-modal-table">
+            <thead>
+                <tr class="fs-medium fw-semi-bold">
+                    <th>Branch</th>
+                    <th>Name</th>
+                    <th>Timestamps</th>
+                    <th>Count</th>
+                    <th>Actions</th>
+                    <!-- Add other fields you want to display -->
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in laterecord %}
+                <tr class="fw-regular">
+                    <td class="table-data-modal">{{ record.EmpCode.BranchCode.BranchCode }}</td>
+                    <td>{{ record.Empname }}</td>
+                    {% if record.timein == "00:00:00"%}
+                        <td>T-in Absent | B-in {{record.breakin}}</td>
+                    {% else %}
+                        <td>T-in {{record.timein}} | B-in {{record.breakin}}</td>
+                    {% endif %}
+                    <td>{{record.latecount}}</td>
+                    <td>
+                        <button class="btn-modal-dashboard fs-small"><a href="{% url 'EmployeeDetails' record.EmpCode_id %}">Assess</a></button>
+                        <button class="btn-modal-dashboard memo fs-small"><a href="#">Memo</a></button>
+                    </td>
+                </tr>
+            {% endfor %}
+            
+            </tbody>
+        </table>
+        
+        <button class="btn-modal-dashboard fs-small" onclick="printEmployeesList('lateEmployeesModal', '<tr class=\'fs-medium fw-semi-bold\'><th>Branch</th><th>Name</th><th>Timestamps</th><th>Count</th><th>Action</th></tr>')">Print Late Employee List</button>
+    </div>
+   
+</div>
+
+
+<div id="absentEmployeesModal" class="modal Dashboard-modal modal-exit">
+    <div class="modal-content Dashboard-Content-modal">
+       
+        <div class="Modal-Header">
+            <h4 class = "fs-medium fw-bold">Absent Employees List <span>(Total: {{ absentcount }})</span></h4>
+            <button class=" btn-modal-dashboard fs-small" onclick="printEmployeesList('absentEmployeesModal', '<tr class=\'fs-medium fw-semi-bold\'><th>Branch</th><th>Employee Name</th><th>Absent Status</th><th>Action</th></tr>')">Print Absent Employee List</button>
+            <div class ="close-button"><button class= "btn-close-modal-dashboard fs-small">Close</button></div>
+            
+        </div>
+       
+        <table class="Dashboard-modal-table">
+            <thead>
+                <tr class="fs-medium fw-semi-bold">
+                    <th>Branch</th>
+                    <th>Employee Name</th>
+                    <th>Absent Status </th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                        
+                            {% for record in absentemployee %}
+                            <tr class="fw-regular">
+                                <td>{{record.BranchCode.BranchCode }}</td>
+                                <td>{{record.Firstname }} {{record.Lastname }}</td>
+                                {% if record.dailyrecord_set.all %}
+                                    <td>
+                                        {{ record.dailyrecord_set.latest.absent }}
+                                    </td>
+                                {% else %}
+                                    <td>No Daily Record</td>
+                                {% endif %}
+
+                            
+                                
+                                <td><button class= "btn-modal-dashboard fs-small"><a href="{% url 'EmployeeDetails' record.EmpCode %}">Assess</a></button></td>
+                            </tr>
+                        {% endfor %}
+            </tbody>
+        </table>
+      
+    </div>
+    
+</div>
+
+
+<div id="breakinoutEmployeesModal" class="modal Dashboard-modal modal-exit">
+    <div class="modal-content Dashboard-Content-modal">
+       
+        <div class="Modal-Header">
+            <h4 class = "fs-medium fw-bold">No Break IN & Break OUT <span>(Total: {{ breakinbreakoutcount }})</span></h4>
+            <div class ="close-button"><button class= "btn-close-modal-dashboard fs-small">Close</button></div>
+        </div>
+
+        <table class="Dashboard-modal-table">
+            <thead>
+                <tr class="fs-medium fw-semi-bold">
+                    <th>Branch</th>
+                    <th>Employee Name</th>
+                    <th>Break-in</th>
+                    <th>Break-out</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in breakinbreakout %}
+                    <tr class="fw-regular">
+                        <td>{{ record.EmpCode.BranchCode.BranchCode }}</td>
+                        <td>{{ record.Empname }}</td>   
+                        <td>{{ record.breakin}}</td>
+                        <td>{{ record.breakout }}</td>   
+
+                        <td><button class= "btn-modal-dashboard fs-small"><a href="{% url 'EmployeeDetails' record.EmpCode.EmpCode %}">Assess</a></button></td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div id="employeeovertimeModal" class="modal Dashboard-modal modal-exit">
+    <div class="modal-content Dashboard-Content-modal">
+       
+        <div class="Modal-Header">
+            <h4 class = "fs-medium fw-bold">No Break IN & Break OUT <span>(Total: {{ employeeovertimecount }})</span></h4>
+            <div class ="close-button"><button class= "btn-close-modal-dashboard fs-small">Close</button></div>
+        </div>
+
+        <table class="Dashboard-modal-table">
+            <thead>
+                <tr class="fs-medium fw-semi-bold">
+                    <th>Branch</th>
+                    <th>Employee Name</th>
+                    <th>Overtime</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in employeeovertime %}
+                    <tr class="fw-regular">
+                        <td>{{ record.EmpCode.BranchCode.BranchCode }}</td>
+                        <td>{{ record.Empname }}</td>   
+                        <td class="{% if record.approveOT %}approved-cell{% else %}not-approved-cell{% endif %}">
+                            {% if record.approveOT %}
+                            <h6 class="StatusStyle-approved fs-small fw-bold">Approved</h6>
+                            {% else %}
+                            <h6 class="StatusStyle-denied fs-small fw-bold">No-Request</h6>
+                            {% endif %}
+                          </td> 
+                          <td><button class= "btn-modal-dashboard fs-small"><a href="{% url 'EmployeeDetails' record.EmpCode.EmpCode %}">Assess</a></button></td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div id="EmployeeAttendance" class="modal Dashboard-modal modal-exit">
+    <div class="modal-content Dashboard-Content-modal">
+        <div class="Modal-Header">
+            <h4 class="fs-medium fw-bold">Overall Attendance<span>(Total: <span id="attendanceCount"></span>)</span></h4>
+            <div class="close-button"><button class="btn-close-modal-dashboard fs-small">Close</button></div>
+        </div>
+
+        <table class="Dashboard-modal-table">
+            <thead>
+                <tr class="fs-medium fw-semi-bold">
+                    <th>Date</th>
+                    <th>Name</th>
+                    <th>Timein</th>
+                    <th>Break-in</th>
+                    <th>Break-out</th>
+                    <th>Timeout</th>
+                </tr>
+            </thead>
+            <tbody id="attendanceTableBody"></tbody>
+        </table>
+    </div>
+</div>
+
+
+<script>
+$(document).ready(function() {
+    $(document).on("click", "#viewAttendanceButton", function(e) {
+        e.preventDefault();
+
+        var empCode = $("#empCode").text();
+        var modal = $("#EmployeeAttendance");
+        if (modal.length) {
+            modal.removeClass("modal-enter");
+            $("#attendanceTableBody").empty();
+        }
+
+        
+        $.ajax({
+            type: "POST",
+            url: "/get_attendance_employee/", 
+            data: {
+                csrfmiddlewaretoken: $("[name=csrfmiddlewaretoken]").val(),
+                empCode: empCode
+            },
+            success: function(data) {
+                console.log("Success:", data);
+              
+                updateModalContent(data);
+               
+                openModal();
+            },
+            error: function(error) {
+                console.error("Error retrieving data:", error);
+            }
+        });
+    });
+
+  
+    function updateModalContent(data) {
+
+        var tableBody = $("#attendanceTableBody");
+        tableBody.empty();
+
+      
+        data.forEach(function(record) {
+            var newRow = "<tr>";
+            newRow += "<td>" + record.date + "</td>";
+            newRow += "<td>" + record.Empname + "</td>";
+            newRow += "<td>" + record.timein + "</td>";
+            newRow += "<td>" + record.breakin + "</td>";
+            newRow += "<td>" + record.breakout + "</td>";
+            newRow += "<td>" + record.timeout + "</td>";
+            newRow += "</tr>";
+
+            tableBody.append(newRow);
+        });
+
+   
+        $("#attendanceCount").text(data.length);
+    }
+
+ 
+    $(".btn-close-modal-dashboard").click(function() {
+        $("#EmployeeAttendance").removeClass("modal-enter");
+    });
+    
+    function openModal() {
+    $("#EmployeeAttendance").css("display", "block");
+    $("#EmployeeAttendance").addClass("modal-enter");
+    }
+    
+    
+});
+</script>
+
+
+<script>
+    document.addEventListener('click', function(event) {
+        console.log('Click event:', event);
+        if (event.target.classList.contains('View-button')) {
+            const empCode = event.target.getAttribute('data-empcode');
+    
+           
+            fetch(`/filter_and_fetch/`, {
+                method: 'POST',
+                body: new FormData(document.getElementById('filterForm')),
+            })
+            .then(response => response.json())
+            .then(filterData => {
+                
+                fetch(`/employee/${empCode}/`)
+                    .then(response => response.json())
+                    .then(infoData => {
+                     
+                        const combinedData = {
+                            ...filterData.processed_employee_data.find(emp => emp.EmpCode === empCode),
+                            ...infoData.employee_info
+                        };
+    
+                        updateIndividualEmployeeData(combinedData);
+                    })
+                    .catch(error => console.error('Error fetching employee info:', error));
+            })
+            .catch(error => console.error('Error fetching filtered data:', error));
+        }
+    });
+    
+    
+
+    function updateTableRows(data) {
+        console.log('Updating table rows with data:', data);
+        const tableBody = document.querySelector('#defaultdatatable tbody');
+        tableBody.innerHTML = '';
+    
+        if (data.length === 0) {
+            // If no records are found, display a message in a single row with colspan
+            const noRecordsRow = document.createElement('tr');
+            noRecordsRow.innerHTML = `<td>No records found.</td>`;
+            tableBody.appendChild(noRecordsRow);
+        } else {
+            // If records are found, display each row
+            data.forEach(rowData => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${rowData.BranchCode}</td>
+                    <td>${rowData.Empname}</td>
+                    <td>${formatDuration(rowData.TotalHoursWorked)}</td>
+                    <td>${rowData.LateCount}</td>
+                    <td>${formatDuration(rowData.TotalAbsentHours)}</td>
+                    <td>${rowData.TotalUndertime}</td>
+                    <td>${formatDuration(rowData.TotalOvertime)}</td>
+                    <td>
+                        <button class="View-button fw-bold fs-small" data-empcode="${rowData.EmpCode}">View</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+    }
+
+    function formatDuration(duration) {
+        const hours = moment.duration(duration).hours();
+        const minutes = moment.duration(duration).minutes();
+        return `${hours}:${minutes}`;
+    }
+
+    function formatDurationDays(durationString, interval) {
+
+        const totalHours = moment.duration(durationString).asHours();
+    
+
+        if (isNaN(totalHours)) {
+            console.error('Invalid totalHours:', totalHours);
+            return 'Invalid input';
+        }
+    
+        const totalDays = Math.floor(totalHours / interval);
+        const remainingHours = totalHours % interval;
+
+        const partialDays = remainingHours > 0 ? 0.5 : 0;
+    
+
+        return `${totalDays + partialDays} days`;
+    }
+
+    let lastClickedEmpCode = null;
+    function updateIndividualEmployeeData(data) {
+
+        const individualEmpElement = document.querySelector('#IndividualEmp');
+        const overallEmployeeElement = document.querySelector('.Trial > .Overall-Employee');
+        const individualEmployeeElement = document.querySelector('.Trial > .Individual-Employee');
+    
+       
+        if (lastClickedEmpCode === data.EmpCode && individualEmpElement.style.display === 'block') {
+            
+            individualEmpElement.style.display = 'none';
+            overallEmployeeElement.style.flex = '1 1 85%';
+            individualEmployeeElement.style.flex = '1 1 10%';
+            lastClickedEmpCode = null; 
+        } else {
+            
+            individualEmpElement.style.display = 'block';
+            overallEmployeeElement.style.flex = '1 1 60%';
+            individualEmployeeElement.style.flex = '1 1 25%';
+            lastClickedEmpCode = data.EmpCode; 
+        }
+
+        document.getElementById('workedHours').textContent = formatDuration(data.TotalHoursWorked); 
+        document.getElementById('empCode').textContent = data.EmpCode; 
+        document.getElementById('empName').textContent = data.Empname; 
+        document.getElementById('lateHours').textContent = `${data.LateCount}  counts`;
+        document.getElementById('undertimeHours').textContent = `${data.TotalUndertime}  counts`;
+        document.getElementById('absentDays').textContent = formatDurationDays(data.TotalAbsentHours,8); 
+        document.getElementById('overtime').textContent = `${formatDuration(data.TotalOvertime)}  hrs`;
+    
+        document.getElementById('sickDays').textContent = `${data.Sick}  days`;
+        document.getElementById('vacationDays').textContent = `${data.Vacation} days`;
+        document.getElementById('graceMinutes').textContent = `${data.GracePeriod} mins`;
+ 
+    }
+    function submitForm(event) {
+        console.log('Form submitted:', event);
+        event.preventDefault();  // Prevent default form submission
+    
+        // Get form data
+        const formData = new FormData(document.getElementById('filterForm'));
+    
+        // Make an AJAX request
+        fetch('{% url 'filter_and_fetch' %}', {
+            method: 'POST',
+            body: formData,
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Received data:', data);
+    
+            // Check if data has the expected property
+            if (data.hasOwnProperty('processed_employee_data')) {
+                const employeeDataArray = data.processed_employee_data;
+    
+                // Check if the array is non-empty
+                if (Array.isArray(employeeDataArray) && employeeDataArray.length > 0) {
+                    // Update the table with the received data
+                    updateTableRows(employeeDataArray);
+                } else {
+                    console.error('Received data array is empty:', employeeDataArray);
+                }
+            } else {
+                console.error('Received data does not have expected property:', data);
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+</script>
+
+<script>
+    function openModal(modalid) {
+        var modal = document.getElementById(modalid);
+        modal.style.display = 'block';
+    }
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var modals = document.getElementsByClassName('modal-exit');
+    
+        for (var i = 0; i < modals.length; i++) {
+            var modal = modals[i];
+    
+            window.addEventListener('click', createEventListener(modal));
+    
+            function createEventListener(currentModal) {
+                return function(event) {
+                    if (event.target === currentModal) {
+                        closeModal(currentModal);
+                    }
+                };
+            }
+    
+            function closeModal(currentModal) {
+                currentModal.style.display = 'none';
+            }
+    
+            var closeButton = modal.querySelector('.close-button');
+            if (closeButton) {
+                closeButton.addEventListener('click', function() {
+                    closeModal(this.closest('.modal-exit'));
+                });
+            }
+        }
+    });
+    
+    
+    </script>
+
+    <script>
+        function printLateEmployeesList() {
+            window.print();
+        }
+    </script>
+
+    <script>
+        function printEmployeesList(modalId, headerContent) {
+            // Collect data from the modal
+            var tableRows = document.querySelectorAll('#' + modalId + ' .Dashboard-modal-table tbody tr');
+            var dataToPrint = '<table class="Dashboard-modal-table"><thead>' +
+                              headerContent +
+                              '</thead><tbody>';
+                
+            tableRows.forEach(function(row) {
+                dataToPrint += row.outerHTML;
+            });
+    
+            dataToPrint += '</tbody></table>';
+    
+            // Pass the data to the other HTML file
+            localStorage.setItem('printData', dataToPrint);
+    
+            // Open the other HTML file in a new window
+            window.open('/home/print-page/');
+        }
+    </script>
+
+    <script>
+        function printDailyEmployeesList(modalId, headerContent) {
+            // AJAX request to get daily records
+            $.ajax({
+                url: '/get_daily_records/',
+                method: 'GET',
+                success: function (data) {
+                    var records = data.records;
+                    var dataToPrint = '<table class="Dashboard-modal-table"><thead>' +
+                        headerContent +
+                        '</thead><tbody>';
+                            
+                    records.forEach(function (record) {
+                        console.log('EmpName:', record.EmpName);
+                        console.log('Timein:', record.Timein);
+                        console.log('Breakout:', record.Breakout);
+                        console.log('Breakin:', record.Breakin);
+                        console.log('Timeout:', record.Timeout);
+                        dataToPrint += '<tr class=\'fs-medium fw-semi-bold\'>' +
+                            '<td>' + record.EmpName + '</td>' +
+                            '<td>' + record.Timein + '</td>' +
+                            '<td>' + record.Breakout + '</td>' +
+                            '<td>' + record.Breakin + '</td>' +
+                            '<td>' + record.Timeout + '</td>' +
+                            '</tr>';
+                    });
+    
+                    // Create a temporary element to parse the HTML and set the text content
+                    var tempElement = document.createElement('div');
+                    tempElement.innerHTML = '<table>' + dataToPrint + '</table>';
+                    var textContent = tempElement.textContent;
+    
+                    // Pass the data to the other HTML file
+                    localStorage.setItem('printData', dataToPrint);
+    
+                    // Open the other HTML file in a new window
+                    window.open('/home/print-page/');
+                },
+                error: function (error) {
+                    console.error('Error fetching daily records:', error);
+                }
+            });
+        }
+    </script>
+
+    
 
 {% endblock content %}

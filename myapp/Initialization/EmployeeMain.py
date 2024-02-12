@@ -43,6 +43,7 @@ def CalculateOvertime(attendance_records):
 
 
 
+
 # This is the calculation for undertime
 def calculate_undertime_for_record(record, field_name, upper_bound_time):
     undertime_duration = timedelta()
@@ -60,69 +61,38 @@ def calculate_undertime_for_record(record, field_name, upper_bound_time):
 def count_undertime_intervals(undertime_duration):
     interval_duration = timedelta(minutes=15)
     undertime_count = math.ceil(undertime_duration.total_seconds() / interval_duration.total_seconds())
-    
+
     return undertime_count
 
+
+
 def CalculateUndertime(attendance_records):
+    total_undertime = timedelta()
     total_undertime_count = 0
 
     for record in attendance_records:
-        print(f"Processing record: {record.date}, {record.timeout}")
+        if record.timeout != time(0, 0):  # Check if timeout is not midnight
+            # Convert record.timeout to string and then to timedelta for comparison
+            
+            undertime_duration = calculate_undertime_for_record(record, "timeout", time(16, 0, 0))
 
-        total_undertime = (
-            calculate_undertime_for_record(record, "timeout", time(16, 0, 0)) +
-            calculate_undertime_for_record(record, "breakout", time(12, 0, 0))
-        )
+            # Check if undertime_duration is not equal to zero timedelta
+            if undertime_duration != timedelta():
+                total_undertime += undertime_duration
+                record.totalundertime = undertime_duration
+                record.save()
+                undertime_count = count_undertime_intervals(undertime_duration)
+                total_undertime_count += undertime_count
 
-        undertime_count = count_undertime_intervals(total_undertime)
-        total_undertime_count += undertime_count
-
-        record.totalundertime = undertime_count
-        record.save()
-
-    return total_undertime_count
-
+    return total_undertime
 
 
 # This is the calculation for lateness
-def calculate_lateness_for_record(record, field_name, fixed_time):
-    total_lateness = timedelta()
-
-    if getattr(record, field_name):
-        field_datetime = datetime.combine(record.date, getattr(record, field_name))
-
-        if field_datetime > datetime.combine(record.date, fixed_time):
-            time_difference = field_datetime - datetime.combine(record.date, fixed_time)
-            time_difference = max(time_difference, timedelta())
-
-            total_lateness += time_difference
-
-    return total_lateness
-
-def count_lateness_intervals(lateness_duration):
-    interval_duration = timedelta(minutes=15)
-    lateness_count = math.ceil(lateness_duration.total_seconds() / interval_duration.total_seconds())
-    
-    return lateness_count
-
-def CalculateLateness(attendance_records, grace_period):
+def CalculateLateness(attendance_records):
     total_lateness_count = 0
 
     for record in attendance_records:
-        if grace_period == 0:
-            total_lateness = calculate_lateness_for_record(record, "timein", time(7, 0, 0))
-            total_lateness += calculate_lateness_for_record(record, "breakin", time(13, 0, 0))
-
-            lateness_count = count_lateness_intervals(total_lateness)
-            total_lateness_count += lateness_count
-
-            hours, remainder = divmod(total_lateness.seconds, 3600)
-            minutes, _ = divmod(remainder, 60)
-            total_lateness_str =  f"{hours:02d}:{minutes:02d}"
-            total_lateness_count_str = lateness_count
-            record.totallateness = total_lateness_str
-            record.latecount = total_lateness_count_str
-            record.save()
+        total_lateness_count += int(record.latecount)
 
     return total_lateness_count
 
@@ -158,9 +128,8 @@ def EmployeeDetails(request, user_id):
     branch_name = user.BranchCode.Company if user.BranchCode else None
     query = request.POST.get("searchquery", "")
 
-    grace_period = attendance_count.GracePeriod 
 
-    total_lateness_str = CalculateLateness(attendance_records,grace_period)
+    total_lateness_str = CalculateLateness(attendance_records)
     total_undertime_str = CalculateUndertime(attendance_records)
     total_overtime_str = CalculateOvertime(attendance_records)
 
@@ -189,6 +158,7 @@ def EmployeeDetails(request, user_id):
             approveOT = bool(request.POST.get("approveOT"))
             created_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             
+            employee_name = get_object_or_404(Employee, EmpCode=EmpCode_id)
            
             Grace_Period(EmpCode_id,timein)
            
@@ -200,7 +170,8 @@ def EmployeeDetails(request, user_id):
                 breakout=breakout,
                 breakin=breakin,
                 approveOT= approveOT,
-                created_at=created_at
+                created_at=created_at,
+                Empname = f"{employee_name.Firstname} {employee_name.Lastname}"
             )
 
           

@@ -11,10 +11,9 @@ from django.shortcuts import render, get_object_or_404
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import JsonResponse, HttpRequest
 from django.views.decorators.csrf import csrf_exempt 
-from django.db.models import Q
+from django.db.models import Q, F, When, Case, Value, TimeField
 from django.contrib import messages
 from django.http import HttpResponseRedirect
-from django.db.models import F
 # from .UserTesting import main
 import base64
 import cv2
@@ -46,14 +45,6 @@ class CustomLogoutView(LogoutView):
 
 def is_admin(user):
     return user.groups.filter(name='admingroup').exists()
-
-
-@login_required(login_url='login')
-def home(request):
-    user_in_admingroup = is_admin(request.user)
-    return render(request, 'temp_myapp/home.html', {'user_in_admingroup': user_in_admingroup})
-
-
 
 @login_required(login_url='login')
 @user_passes_test(is_admin, login_url='login')
@@ -270,7 +261,7 @@ def login_view(request):
 SHAPE_PREDICTOR_PATH = "myapp/assets/pre-trained/shape_predictor_68_face_landmarks.dat"
 FRAME_WIDTH = 720
 FRAME_HEIGHT = 420
-THRESHOLD = 0.380
+THRESHOLD = 0.353
 GLOBALNAME = ''
 
 
@@ -288,11 +279,11 @@ threshold = 3
 
 
 # Main Function for Caching and Face Recogntion
-def recognize_face(request, face_encoding, known_face_encodings, known_face_names, location):
-    # Extracting location information
-
+def recognize_face(request, face_encoding, known_face_encodings, known_face_names, location,current_time):
+  
     # need to change in internet time
-    current_time = datetime.now()
+    #current_time = datetime.now()
+ 
 
     if tuple(face_encoding) in recognize_face_cache and current_time - recognize_face_cache[tuple(face_encoding)]["timestamp"] < cache_exp:
         return recognize_face_cache[tuple(face_encoding)]["name"]
@@ -325,7 +316,7 @@ def recognize_face(request, face_encoding, known_face_encodings, known_face_name
             
             max_name = recognize_face_cache[tuple(face_encoding)]["name"]
 
-            employee_login_dtr(request, max_name, face_encoding)
+            employee_login_dtr(request, max_name, face_encoding,current_time)
             space_index = max_name.find(" ")
             if space_index != -1:
                 employee_number = name[:space_index]
@@ -358,18 +349,24 @@ def calculate_eye_distance(left_eye, right_eye):
     angle = math.degrees(math.atan2(delta_y, delta_x))
     return angle
 
-known_faces_dict = load_known_faces()
 
+known_faces_dict = load_known_faces()
 def update_selected_key(request):
     selected_key = request.POST.get('selected_key', '')
     request.session['selected_key'] = selected_key
     request.session.save()
 
-    return JsonResponse({'status': 'success'})
+    # Include the updated session value in the response
+    response_data = {
+        'status': 'success',
+        'selected_key': selected_key
+    }
+
+    return JsonResponse(response_data)
 
 # Main function for initialization of camera and face recognition
 def gen_frames(request,selected_key_value=None):
-    #known_faces_dict = load_known_faces()
+    
     if 'selected_key' in request.session:
         selected_key_value = request.session['selected_key']
     else:
@@ -443,24 +440,24 @@ def gen_frames(request,selected_key_value=None):
                 aligned_face_rgb = preprocess(aligned_face)
 
              
-                # augmented_face = apply_lighting_augmentation(aligned_face_rgb, alpha=1.2, beta=30)
+                augmented_face = apply_lighting_augmentation(aligned_face_rgb, alpha=1.2, beta=30)
 
-                face_locations = face_recognition.face_locations(aligned_face_rgb)
-                face_encodings = face_recognition.face_encodings(aligned_face_rgb, face_locations)
+                face_locations = face_recognition.face_locations(augmented_face)
+                face_encodings = face_recognition.face_encodings(augmented_face, face_locations)
                 
       
                   # need to change in internet time
                 #current_time = request.current_time
                 
-                # current_time = datetime.now()
-                batch_size =   6
+                current_time = datetime.now()
+                batch_size =   3
                 face_batches = [face_encodings[i:i + batch_size] for i in range(0, len(face_encodings), batch_size)]
                 location_batches = [face_locations[i:i + batch_size] for i in range(0, len(face_locations), batch_size)]
 
 
                 with ThreadPoolExecutor() as executor:
                     for face_batch, location_batch in zip(face_batches, location_batches):
-                        futures = [executor.submit(recognize_face, request, face_encoding, known_face_encodings, known_face_names, location)
+                        futures = [executor.submit(recognize_face, request, face_encoding, known_face_encodings, known_face_names, location,current_time)
                                 for face_encoding, location in zip(face_batch, location_batch)]
 
                         for future, (top, right, bottom, left) in zip(futures, location_batch):
@@ -498,9 +495,9 @@ def camera_feed(request):
 
 
 # function for inserting timein, breakout, breakin , timeout in the database
-def employee_login_dtr(request, name, face_encoding):
+def employee_login_dtr(request, name, face_encoding,current_time):
         # need to change in internet time
-        current_time = datetime.now()
+        #current_time = datetime.now()
        
    
 
@@ -518,12 +515,14 @@ def employee_login_dtr(request, name, face_encoding):
         global global_variable_name
         recognize_face_cache[tuple(face_encoding)] = {"employee_number": employee_number, "timestamp": current_time.timestamp()}
 
+
+    # Extracting location information
         if "06:00" <= prac_time <= "16:00":
             deleteTable()
-            ResetGraceAndLeaves()
+            # ResetGraceAndLeaves()
             
             
-        if "03:00" <= prac_time <= "10:59": 
+        if "03:00" <= prac_time <= "09:59": 
             existing_entry = DailyRecord.objects.filter(EmpCode_id=employee_number,date=current_time.date()).first()
             if existing_entry is None: 
                 insertData(employee_number, current_time,employee_name)
@@ -575,13 +574,15 @@ def employee_login_dtr(request, name, face_encoding):
             
         if "15:00" <= prac_time <= "23:59" and temporray.objects.filter(employee_number=employee_number, timein_names__isnull=False, breakout_names__isnull=False,breakin_names__isnull=False, timeout_names__isnull=True,date=current_time.date()).exists():
             existing_entry3 = temporray.objects.filter(employee_number=employee_number, date=current_time.date()).first()
-            
+            print("im Executed")
             existing_entry_breakin_timestamps = existing_entry3.breakin_timestamps.replace(tzinfo=timezone.utc)
             current_time = current_time.replace(tzinfo=timezone.utc)
             
             time_difference = current_time - existing_entry_breakin_timestamps
             remaining_seconds = max(30 - time_difference.total_seconds(), 0)
-            
+            # if temporray.objects.filter(employee_number=employee_number,  timeout_timestamps__isnull=False):
+            #     global_variable_name = "You Already TIMEOUT!!! \n"  + employee_name
+            #     get_name(request)
             if current_time - existing_entry_breakin_timestamps >= timedelta(seconds=30):
                 timeout(employee_number, current_time)  
                 temporray.objects.filter(employee_number=employee_number, date=current_time.date()).update(breakin_names=employee_number,timeout_timestamps=current_time)
@@ -589,15 +590,15 @@ def employee_login_dtr(request, name, face_encoding):
                 get_name(request)
                 print("Successfully Timeout block executed")
                 return "Successfully Timeout..."
-            elif temporray.objects.filter(employee_number=employee_number,  timeout_names__isnull=False):
-                global_variable_name = "You Already TIMEOUT!!! \n"  + employee_name
-                get_name(request)
             else:
                 return f"please wait...{int(remaining_seconds)} seconds"
+        
 
 
-
-        if "15:00" <= prac_time <= "23:59" and temporray.objects.filter(employee_number=employee_number, timein_names__isnull=False, breakin_names__isnull=True,breakout_names__isnull=True, date=current_time.date()).exists():
+       
+        if "15:00" <= prac_time <= "23:59" and temporray.objects.filter(Q(breakin_names__isnull=True) | Q(breakout_names__isnull=False), employee_number=employee_number,timein_names__isnull=False, date=current_time.date()).exists():
+            nobreak_out_in(employee_number, current_time)
+            temporray.objects.filter(employee_number=employee_number, date=current_time.date()).update(timein_names=employee_number,timeout_timestamps=current_time)
             global_variable_name ="NO BEAKOUT AND BREAKIN! \n" + employee_name
             print(global_variable_name) 
             print("Successfully NO BEAKOUT AND BREAKIN block executed")
@@ -606,7 +607,7 @@ def employee_login_dtr(request, name, face_encoding):
         
 
         #if login afternoon
-        if "11:00" <= prac_time <= "23:59":
+        if "10:00" <= prac_time <= "23:59":
                 existing_entry = DailyRecord.objects.filter(EmpCode_id=employee_number,date=current_time.date()).first()
                 if existing_entry is None: 
                     afternoonBreakIn(employee_number, current_time, employee_name)
@@ -640,7 +641,100 @@ def employee_login_dtr(request, name, face_encoding):
 
 def afternoonBreakIn(employee_number,current_time,employee_name):
     formatted_time = current_time.strftime("%H:%M:%S")
-    DailyRecord.objects.filter(EmpCode_id=employee_number,date=current_time.date()).create(EmpCode_id=employee_number,Empname=employee_name,breakin=formatted_time)
+    total_lateness = timedelta()
+
+    fixed_time = time(11, 0, 0)
+    timein_datetime = current_time.time()
+
+    if timein_datetime > fixed_time:
+        time_difference = datetime.combine(current_time.date(), timein_datetime) - datetime.combine(current_time.date(), fixed_time)
+        time_difference = max(time_difference, timedelta())
+        total_lateness += time_difference
+
+    hours, remainder = divmod(total_lateness.seconds, 3600)
+    minutes, _ = divmod(remainder, 60)
+    lateness_count = count_lateness_intervals(total_lateness)
+    total_lateness_str = f"{hours:02d}:{minutes:02d}"
+    total_lateness_count_str = lateness_count
+
+    attendance_count, created = AttendanceCount.objects.get_or_create(EmpCode=employee_number)
+
+    current_grace_period = timedelta(minutes=attendance_count.GracePeriod)
+
+    if total_lateness.total_seconds() > current_grace_period.total_seconds():
+        # If lateness is 2 hours or more, set formatted_time to "00:00:00"
+        if total_lateness >= timedelta(hours=2):
+            formatted_time = formatted_time
+            total_lateness = timedelta()
+            hours, remainder = divmod(total_lateness.seconds, 3600)
+            minutes, _ = divmod(remainder, 60)
+            lateness_count = count_lateness_intervals(total_lateness)
+            total_lateness_str = f"{hours:02d}:{minutes:02d}"
+            total_lateness_count_str = lateness_count
+
+            # Mark as absent AM
+            DailyRecord.objects.create(
+                EmpCode_id=employee_number,
+                Empname=employee_name,
+                date=current_time.date(),
+                timein="00:00:00",
+                breakout="00:00:00",
+                absent="Absent",
+                breakin=formatted_time,  # Use formatted_time here
+                timeout="00:00:00"
+            )
+            temporray.objects.create(
+            employee_number=employee_number,
+            Empname=employee_name,
+            date=current_time.date(),
+            breakin_names=employee_number,
+            afternoonBreakin_timestamps=current_time,
+            timeout_names=employee_number,
+            afternoonTimeout_timestramps=current_time
+            )
+
+        else:
+            new_grace_period = timedelta(minutes=0)
+            lateness_count = count_lateness_intervals(total_lateness)
+            total_lateness_count_str = lateness_count
+    else:
+        new_grace_period = current_grace_period - total_lateness
+
+    attendance_count.GracePeriod = new_grace_period.total_seconds() // 60
+    attendance_count.save()
+
+    if new_grace_period.total_seconds() == 0 and total_lateness > timedelta(minutes=0) or total_lateness > timedelta(minutes=0):
+        # If grace period is 0, mark as late AM
+        late_count = count_lateness_intervals(total_lateness)
+        DailyRecord.objects.create(
+            EmpCode_id=employee_number,
+            Empname=employee_name,
+            date=current_time.date(),
+            timein="00:00:00",
+            breakout="00:00:00",
+            late="Late PM",
+            absent = "Absent AM",
+            totallateness=total_lateness_str,
+            latecount=total_lateness_count_str,
+            breakin=formatted_time  # Use formatted_time here
+            
+        )
+    else:
+        # Deduct from grace period
+        DailyRecord.objects.create(
+            EmpCode_id=employee_number,
+            Empname=employee_name,
+            date=current_time.date(),
+            totallateness=total_lateness_str,
+            absent = "Absent AM",
+            timein="00:00:00",
+            breakout="00:00:00",
+            breakin=formatted_time  # Use formatted_time here
+        )
+
+    
+
+
 
 def afternoonTimeout(employee_number,current_time):
     formatted_time = current_time.strftime("%H:%M:%S")
@@ -649,112 +743,220 @@ def afternoonTimeout(employee_number,current_time):
 def breakout(employee_number, current_time):
     formatted_time = current_time.strftime("%H:%M:%S")
     total_undertime = timedelta()
-    if current_time:
-            breakout_datetime = datetime.combine(current_time.date(), current_time.time())
-            upper_bound_breakout = datetime.combine(current_time.date(), time(12, 0, 0))
 
-            if breakout_datetime < upper_bound_breakout:
-                time_difference_breakout = upper_bound_breakout - breakout_datetime
-                time_difference_breakout = max(time_difference_breakout, timedelta())
+    # Check if there is an existing breakout value
+    existing_entry = DailyRecord.objects.filter(
+        timein__isnull=False,
+        breakout__isnull=False,  # Check if breakout is not null
+        EmpCode_id=employee_number,
+        date=current_time.date()
+    ).first()
 
-                total_undertime += time_difference_breakout
+    if existing_entry is not None and existing_entry.breakout != "00:00:00":
+        # If breakout has a value, skip the update
+        return
 
-            hours, remainder = divmod(total_undertime.seconds, 3600)
-            minutes, _ = divmod(remainder, 60)
-            total_undertime_str = f"{hours:02d}:{minutes:02d}"
-            DailyRecord.objects.filter(timein__isnull=False,breakout__isnull=True, EmpCode_id=employee_number,date=current_time.date()).update(breakout=formatted_time, totalundertime=total_undertime_str)
+    breakout_datetime = datetime.combine(current_time.date(), current_time.time())
+    upper_bound_breakout = datetime.combine(current_time.date(), time(12, 0, 0))
+
+    if breakout_datetime < upper_bound_breakout:
+        time_difference_breakout = upper_bound_breakout - breakout_datetime
+        time_difference_breakout = max(time_difference_breakout, timedelta())
+
+        total_undertime += time_difference_breakout
+
+    hours, remainder = divmod(total_undertime.seconds, 3600)
+    minutes, _ = divmod(remainder, 60)
+    total_undertime_str = f"{hours:02d}:{minutes:02d}"
+
+   
+    DailyRecord.objects.filter(
+        timein__isnull=False,
+        breakout__isnull=True,  
+        EmpCode_id=employee_number,
+        date=current_time.date()
+    ).update(breakout=formatted_time, totalundertime=total_undertime_str)
+
 
 def count_lateness_intervals(lateness_duration):
     interval_duration = timedelta(minutes=15)
     lateness_count = math.ceil(lateness_duration.total_seconds() / interval_duration.total_seconds())
-    
     return lateness_count
-    
 
-def insertData(employee_number, current_time,employee_name):
+
+def insertData(employee_number, current_time, employee_name):
     formatted_time = current_time.strftime("%H:%M:%S")
     total_lateness = timedelta()
 
-    if current_time:
-        fixed_time = time(7, 0, 0)
-        timein_datetime = datetime.combine(current_time.date(), current_time.time())
+    fixed_time = time(7, 0, 0)
+    timein_datetime = current_time.time()
 
-        if timein_datetime > datetime.combine(current_time.date(), fixed_time):
-            time_difference = timein_datetime - datetime.combine(current_time.date(), fixed_time)
-            time_difference = max(time_difference, timedelta())
-            total_lateness += time_difference
-        
-        hours, remainder = divmod(total_lateness.seconds, 3600)
-        minutes, _ = divmod(remainder, 60)
-        lateness_count = count_lateness_intervals(total_lateness)
-        total_lateness_str = f"{hours:02d}:{minutes:02d}"
-        total_lateness_count_str = lateness_count
+    if timein_datetime > fixed_time:
+        time_difference = datetime.combine(current_time.date(), timein_datetime) - datetime.combine(current_time.date(), fixed_time)
+        time_difference = max(time_difference, timedelta())
+        total_lateness += time_difference
 
-        attendance_count = AttendanceCount.objects.get(EmpCode=employee_number)
+    hours, remainder = divmod(total_lateness.seconds, 3600)
+    minutes, _ = divmod(remainder, 60)
+    lateness_count = count_lateness_intervals(total_lateness)
+    total_lateness_str = f"{hours:02d}:{minutes:02d}"
+    total_lateness_count_str = lateness_count
 
-        current_grace_period = timedelta(minutes=attendance_count.GracePeriod)
+    attendance_count, created = AttendanceCount.objects.get_or_create(EmpCode=employee_number)
 
-        if total_lateness.total_seconds() > current_grace_period.total_seconds():
-            # If lateness is 2 hours or more, set formatted_time to "00:00:00"
-            if total_lateness >= timedelta(hours=2):
-                formatted_time = "00:00:00"
-                total_lateness = timedelta()
-                hours, remainder = divmod(total_lateness.seconds, 3600)
-                minutes, _ = divmod(remainder, 60)
-                lateness_count = count_lateness_intervals(total_lateness)
-                total_lateness_str = f"{hours:02d}:{minutes:02d}"
-                total_lateness_count_str = lateness_count
+    current_grace_period = timedelta(minutes=attendance_count.GracePeriod)
 
-            new_grace_period = timedelta(minutes=0)
+    if total_lateness.total_seconds() > current_grace_period.total_seconds():
+        # If lateness is 2 hours or more, set formatted_time to "00:00:00"
+        if total_lateness >= timedelta(hours=2):
+            formatted_time = formatted_time
+            total_lateness = timedelta()
+            hours, remainder = divmod(total_lateness.seconds, 3600)
+            minutes, _ = divmod(remainder, 60)
+            lateness_count = count_lateness_intervals(total_lateness)
+            total_lateness_str = f"{hours:02d}:{minutes:02d}"
+            total_lateness_count_str = lateness_count
+
+            # Mark as absent AM
+            DailyRecord.objects.create(
+                EmpCode_id=employee_number,
+                Empname=employee_name,
+                date=current_time.date(),
+                absent="Absent AM",
+                timein=formatted_time,  # Use formatted_time here
+                breakout="00:00:00"
+            )
+            temporray.objects.create(
+            employee_number=employee_number,
+            Empname=employee_name,
+            date=current_time.date(),
+            timein_names=employee_number,
+            timein_timestamps=current_time,
+            breakout_names=employee_number,
+            breakout_timestamps=current_time
+            )
+
         else:
-            new_grace_period = current_grace_period - total_lateness
+            remaining_lateness = total_lateness - current_grace_period
+            new_grace_period = timedelta(minutes=0)
+            lateness_count = count_lateness_intervals(remaining_lateness)
+            total_lateness_count_str = lateness_count
+    else:
+        new_grace_period = current_grace_period - total_lateness
 
-        attendance_count.GracePeriod = new_grace_period.total_seconds() // 60 
-        attendance_count.save()
+    attendance_count.GracePeriod = new_grace_period.total_seconds() // 60
+    attendance_count.save()
 
-        DailyRecord.objects.filter(EmpCode_id=employee_number,Empname=employee_name, date=current_time.date()).create(
+    if new_grace_period.total_seconds() == 0 and total_lateness > timedelta(minutes=0) or total_lateness > timedelta(minutes=0):
+        # If grace period is 0, mark as late AM
+        
+        DailyRecord.objects.create(
             EmpCode_id=employee_number,
-            timein=formatted_time,
+            Empname=employee_name,
+            date=current_time.date(),
+            late="Late AM",
             totallateness=total_lateness_str,
-            latecount=total_lateness_count_str
+            latecount=total_lateness_count_str,
+            timein=formatted_time  # Use formatted_time here
+            
         )
+        print("this late am trigger")
+    else:
+        # Deduct from grace period
+        DailyRecord.objects.create(
+            EmpCode_id=employee_number,
+            Empname=employee_name,
+            date=current_time.date(),
+            totallateness=total_lateness_str,
+            timein=formatted_time  # Use formatted_time here
+        )
+def add_time_strings(time_str1, time_str2):
+    h1, m1 = map(int, time_str1.split(':'))
+    h2, m2 = map(int, time_str2.split(':'))
 
+    total_minutes = (h1 + h2) * 60 + (m1 + m2)
+    hours, minutes = divmod(total_minutes, 60)
 
-def breakin(employee_number,current_time):
+    return f"{hours:02d}:{minutes:02d}"
+
+def breakin(employee_number, current_time):
     formatted_time = current_time.strftime("%H:%M:%S")
     total_lateness = timedelta()
+
     if current_time:
-        fixed_tme = time(13,0,0)
+        fixed_time = time(13, 0, 0)
         breakin_datetime = datetime.combine(current_time.date(), current_time.time())
 
-        if breakin_datetime > datetime.combine(current_time.date(), fixed_tme):
-            time_difference = breakin_datetime - datetime.combine(current_time.date(), fixed_tme)
+        if breakin_datetime > datetime.combine(current_time.date(), fixed_time):
+            time_difference = breakin_datetime - datetime.combine(current_time.date(), fixed_time)
             time_difference = max(time_difference, timedelta())
-
             total_lateness += time_difference
-        
+
+            attendance_record = DailyRecord.objects.filter(
+                timein__isnull=False, breakout__isnull=False, breakin__isnull=True, EmpCode_id=employee_number,
+                date=current_time.date()
+            ).first()
+
+            if attendance_record:
+                # Update the 'late' field only when it's "Absent AM"
+                if attendance_record.late == "Late AM":
+                    attendance_record.late = "Late AM-PM"
+                else:
+                    attendance_record.late = "Late PM"
+
+                # Update the 'absent' field if total lateness is more than 3 hours
+                if total_lateness > timedelta(hours=3):
+                    if attendance_record.absent == "Absent AM":
+                        attendance_record.absent = "Absent"
+                    else:
+                        attendance_record.absent = "Absent PM"
+
+                attendance_record.save()
+
         hours, remainder = divmod(total_lateness.seconds, 3600)
         minutes, _ = divmod(remainder, 60)
         lateness_count = count_lateness_intervals(total_lateness)
         total_lateness_str = f"{hours:02d}:{minutes:02d}"
         total_lateness_count_str = lateness_count
+        print(total_lateness_count_str)
 
-        
+        existing_record = DailyRecord.objects.filter(
+            timein__isnull=False, breakout__isnull=False, breakin__isnull=True,
+            EmpCode_id=employee_number, date=current_time.date()
+        ).first()
+
+        if existing_record:
+            # Add the new values to the existing values
+            total_lateness_count_str = int(total_lateness_count_str) + int(existing_record.latecount)
+
+            total_lateness_str = add_time_strings(total_lateness_str, existing_record.totallateness)
+
         attendance_count = AttendanceCount.objects.get(EmpCode=employee_number)
-        
+
         current_grace_period = timedelta(minutes=attendance_count.GracePeriod)
 
         if total_lateness > current_grace_period:
             new_grace_period = timedelta(minutes=0)
+            # Update the count only if the new_grace_period is equal to 0
+            if new_grace_period == timedelta(minutes=0):
+                total_lateness_count_str = int(total_lateness_count_str) + 1
         else:
             new_grace_period = current_grace_period - total_lateness
+            total_lateness_count_str = 0
 
-        attendance_count.GracePeriod = new_grace_period.total_seconds() // 60 
+        attendance_count.GracePeriod = new_grace_period.total_seconds() // 60
 
         attendance_count.save()
+       
+        # Update the record with the new values
+        DailyRecord.objects.filter(
+            timein__isnull=False, breakout__isnull=False, breakin__isnull=True,
+            EmpCode_id=employee_number, date=current_time.date()
+        ).update(
+            breakin=formatted_time, totallateness=total_lateness_str, latecount=total_lateness_count_str
+        )
 
-        DailyRecord.objects.filter(timein__isnull=False,breakout__isnull=False,breakin__isnull=True, EmpCode_id=employee_number, date=current_time.date()).update(breakin=formatted_time,totallateness=total_lateness_str,latecount =total_lateness_count_str)
-    
+      
 def timeout(employee_number,current_time):
     formatted_time = current_time.strftime("%H:%M:%S")
 
@@ -774,6 +976,20 @@ def timeout(employee_number,current_time):
         minutes, _ = divmod(remainder, 60)
         total_undertime_str = f"{hours:02d}:{minutes:02d}"    
         DailyRecord.objects.filter(timein__isnull=False,breakin__isnull=False,breakout__isnull=False,timeout__isnull=True, EmpCode_id=employee_number, date=current_time.date()).update(timeout=formatted_time,totalundertime=total_undertime_str)
+
+
+
+def nobreak_out_in(employee_number, current_time):
+    DailyRecord.objects.filter(
+        EmpCode_id=employee_number,
+        date=current_time.date()
+    ).update(
+        timein="00:00:00",
+        breakout="00:00:00",
+        breakin="00:00:00",
+        timeout="00:00:00",
+        absent = "Absent"
+    )
 
 
 def deleteTable():
@@ -831,7 +1047,7 @@ def facedetection(request):
 # fetching list of employee attendace to be display in table
 def get_attendance_data(request):
     current_date = date.today()
-    attendances = DailyRecord.objects.filter(date=current_date).order_by('-timein')
+    attendances = DailyRecord.objects.filter(date=current_date).order_by('-created_at')
     
     def custom_sort(attendance):
         times = [attendance.breakout, attendance.breakin, attendance.timeout]
@@ -850,7 +1066,8 @@ def get_attendance_data(request):
             'timein': str(attendance.timein),
             'breakout': str(attendance.breakout),
             'breakin': str(attendance.breakin),
-            'timeout': str(attendance.timeout)
+            'timeout': str(attendance.timeout),
+            'absent': str(attendance.absent)
         } for attendance in sorted_attendances
     ]
 

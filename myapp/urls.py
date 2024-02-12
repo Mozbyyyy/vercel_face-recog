@@ -1,6 +1,7 @@
 # from django.contrib.auth import views as auth_views
 from django.urls import path
 from . import views
+from .Initialization import OverallRecord
 from .Initialization import EmployeeMain
 from .views import employee_count
 from .views import employee_late
@@ -17,6 +18,7 @@ from .Initialization.RequestForm import search_view
 
 
 
+
   
 
 
@@ -24,7 +26,7 @@ from .Initialization.RequestForm import search_view
 # from .views import employee_attendance_view
 urlpatterns = [
      path('', views.login_view, name='login'),
-     path('home/', views.home, name='home'),
+     path('home/', OverallRecord.home, name='home'),
      path('logout/', views.CustomLogoutView.as_view(), name='logout'),
      path('addemployee/', views.addemployee, name="addemployee"),
      
@@ -44,7 +46,14 @@ urlpatterns = [
      path('BranchDetails/<str:branch>', BranchDetails, name='BranchDetails'),
      path('RequestForms/', RequestForms, name='RequestForms'),
      path('search_view/', search_view, name='search_view'),
-     path('update_selected_key/',views.update_selected_key,name='update_selected_key')
+     path('filter_and_fetch/', OverallRecord.filter_and_fetch, name='filter_and_fetch'),
+     path('update_selected_key/',views.update_selected_key,name='update_selected_key'),
+     path('employee/<str:emp_id>/', OverallRecord.view_employee_info, name='view_employee_info'),
+     path('home/print-page/', OverallRecord.PrintPage, name='PrintPage'),
+     path('get_daily_records/', OverallRecord.get_daily_records, name='get_daily_records'),
+     path('get_attendance_employee/', OverallRecord.get_attendance_employee, name='get_attendance_employee')
+
+     
      
      # path('latest_employee/', latest_employee, name='latest_employee'),
   ]

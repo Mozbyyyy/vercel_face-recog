@@ -1,5 +1,5 @@
-# import requests
-# from datetime import datetime
+
+from datetime import datetime
 
 # class CurrentTimeMiddleware:
 #     def __init__(self, get_response):
@@ -24,12 +24,15 @@
 #         response = self.get_response(request)
 #         return response
 
-from datetime import datetime
+
+
+# from datetime import datetime
 class CurrentTimeMiddleware:
     def __init__(self,get_response):
         self.get_response = get_response
 
     def __call__(self,request):
         request.current_time =datetime.now()
+        print("Middleware executed. Current time:", request.current_time)
         response = self.get_response(request)
         return(response)

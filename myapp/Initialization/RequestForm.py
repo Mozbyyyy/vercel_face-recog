@@ -42,8 +42,6 @@ def create_request(request_type, DeductRange, EmpCode_id, is_approved, remarks, 
     elif request_type == "Sick":
         attendace_count.Sick -= deduction_value
 
-
-
 def RequestForms(request):
         query = request.POST.get("searchquery", "")
 
