@@ -1,18 +1,34 @@
-FROM orgoro/dlib-opencv-python:latest
+FROM python:3.11-slim-buster
 
-# You can remove the multi-stage build if not needed
 
-# Assuming requirements.txt is already included in orgoro/dlib-opencv-python image
-# If not, you can still keep this step to install additional requirements
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+
+# Set working directory
+WORKDIR /app
+# Update repositories and install necessary build tools
+RUN apt-get update && apt-get install -y \
+    cmake \
+    make \
+    gcc \
+    g++ \
+    libgl1-mesa-glx \
+    libglib2.0-0 \
+    libzbar-dev && \
+    rm -rf /var/lib/apt/lists/*
+
+
+
+# Copy requirements file
 COPY requirements.txt requirements.txt
+
+# Install Python dependencies
 RUN pip3 install -r requirements.txt
 
-# Upgrade pip to the latest version
-RUN pip3 install --upgrade pip
+# Copy your project files
+COPY . .
 
-# No need for multi-stage build as you're using a pre-built image
-# You can directly use the orgoro/dlib-opencv-python image
-
-# Expose port 8000 and run your application
-EXPOSE 8000
+# Run Django with Gunicorn
 CMD ["gunicorn", "--bind", "0.0.0.0:8000", "myproject.wsgi"]
