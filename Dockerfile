@@ -11,9 +11,7 @@ RUN apt-get install -y \
     libzbar-dev && \
     rm -rf /var/lib/apt/lists/*
 
-
 WORKDIR /app
-
 
 COPY requirements.txt requirements.txt
 
