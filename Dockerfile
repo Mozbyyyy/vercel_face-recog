@@ -1,70 +1,18 @@
-FROM python:3.11-slim-buster
+FROM orgoro/dlib-opencv-python:latest
 
-RUN apt-get update
-RUN apt-get install -y \
-    cmake \
-    make \
-    gcc \
-    g++ \
-    libgl1-mesa-glx \
-    libglib2.0-0 \
-    libzbar-dev && \
-    rm -rf /var/lib/apt/lists/*
+# You can remove the multi-stage build if not needed
 
-WORKDIR /app
-
+# Assuming requirements.txt is already included in orgoro/dlib-opencv-python image
+# If not, you can still keep this step to install additional requirements
 COPY requirements.txt requirements.txt
-
 RUN pip3 install -r requirements.txt
 
-COPY . .
+# Upgrade pip to the latest version
+RUN pip3 install --upgrade pip
 
+# No need for multi-stage build as you're using a pre-built image
+# You can directly use the orgoro/dlib-opencv-python image
 
+# Expose port 8000 and run your application
+EXPOSE 8000
 CMD ["gunicorn", "--bind", "0.0.0.0:8000", "myproject.wsgi"]
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# FROM python:3.11-slim-buster
-
-# RUN apt-get update
-# # Install opencv-python
-# RUN apt-get install -y libgl1-mesa-glx libglib2.0-0 libzbar-dev && \
-#     rm -rf /var/lib/apt/lists/*
-
-# # Optional: Use a different mirror (replace with your preferred mirror)
-# # RUN echo 'deb http://us.archive.ubuntu.com/ubuntu focal main restricted universe multiverse' >> /etc/apt/sources.list
-
-# # Update repositories
-
-# # Set working directory
-# WORKDIR /app
-
-# # Copy requirements file
-# COPY requirements.txt requirements.txt
-
-# # Install Python dependencies
-# RUN pip3 install -r requirements.txt
-
-# # Copy your project files
-# COPY . .
-
-# # Run Django with Gunicorn
-# CMD ["gunicorn", "--bind", "0.0.0.0:8000", "myproject.wsgi"]
-
-
