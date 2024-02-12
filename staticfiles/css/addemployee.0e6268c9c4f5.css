@@ -1,0 +1,50 @@
+
+.employee-list-container{
+  width: min(90%, 100%);
+  margin-inline: auto;
+}
+
+
+.empcode input[readonly] {
+  background-color: rgba(77,72,72,0.2);
+  cursor: not-allowed;
+}
+.RemainingLeaves input[readonly]{
+  background-color: rgba(77, 72, 72, 0.2);
+  cursor: not-allowed;
+}
+
+.delete-context{
+  text-transform: uppercase;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+
+/* table td,
+table th {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+thead th {
+  color: #fff;
+}
+
+.card {
+  border-radius: .5rem;
+}
+
+.table-scroll {
+  border-radius: .5rem;
+}
+
+.table-scroll table thead th {
+  font-size: 1.10rem;
+}
+thead {
+  top: 0;
+  position: sticky;
+} */
