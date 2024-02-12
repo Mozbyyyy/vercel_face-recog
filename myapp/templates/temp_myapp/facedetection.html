@@ -1,0 +1,398 @@
+{% extends "temp_myapp/base.html" %}
+{% load static %}
+
+{% block content %} 
+{% include 'temp_myapp/navbar.html' %}
+
+
+<link rel="stylesheet" type="text/css" href="{% static 'css/facedetection.css' %}"> 
+
+<script src="{% static 'js/design-change.js' %}"></script>
+    <div class="Wrapper">
+
+        <div class="HeaderStyle HeaderContext-christmas">
+
+            <div class="HeaderContext">
+                <h1 class="fs-secondary fw-extra-bold" id="currentDate"></h1>
+            
+                <div class="con-inline-block">
+                    <h6 class="fs-medium fw-bold text-clr-secondary-neutral">This shows daily data in real-time.</h6>
+                    <a class="fs-medium fw-bold text-clr-primary-accent" href="#">Insights -></a>
+                </div>
+                
+                <h1 class="fs-primary fw-extra-bold text-clr-primary-accent" id="currentTime"></h1>
+            
+                <script>
+                    // Function to update the date and time
+                    function updateDateTime() {
+                        var currentDateElement = document.getElementById('currentDate');
+                        var currentTimeElement = document.getElementById('currentTime');
+            
+                        var now = new Date();
+            
+                        // Update the date format
+                        var options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                        currentDateElement.textContent = now.toLocaleDateString('en-US', options);
+            
+                        // Update the time format
+                        var timeOptions = { hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: true };
+                        currentTimeElement.textContent = now.toLocaleTimeString('en-US', timeOptions);
+                    }
+
+                    updateDateTime();
+
+                    setInterval(updateDateTime, 1000);
+                </script>
+            </div>
+
+            <div class="Insights christmas-design InsightsEventIcon">
+            
+              
+
+                <div class="Insight1 flow InsightsStyle InsightBorder">
+                    <h1 class="fs-small fw-bold InsightTextColor">Total Employee</h1>
+                    
+                    <div class="Counter">
+                        <p>
+                            <i class="fs-medium fw-bold">
+                                <span id="employeeCount" class="forMarginIcon employeeCount">0</span>
+                            </i>
+                        </p>
+                    </div>
+                    
+                </div>
+    
+                <div class="Insight2 flow InsightsStyle InsightBorder">
+                    <h1 class="fs-small fw-bold InsightTextColor">On Time</h1>
+                    
+                    <div class="Counter">
+                        <p>
+                            <i class="fs-medium fw-bold">
+                                <span id="earlyEmployeeCount" class="forMarginIcon earlyEmployeeCount">0</span> 
+                            </i>
+                        </p>
+                    </div>
+                    
+                </div>
+
+                <div class="Insight3 flow InsightsStyle InsightBorder">
+                    <h1 class="fs-small fw-bold InsightTextColor">Late In</h1>
+                    
+                    <div class="Counter">
+                        <p>
+                            <i class="fs-medium fw-bold">
+                                <span id="lateEmployeeCount" class="forMarginIcon lateEmployeeCount">0</span> 
+                            </i>
+                        </p>
+                    </div>
+                    
+                </div>
+    
+                <div class="Insight4 flow InsightsStyle InsightBorder">
+                    <h1 class="fs-small fw-bold InsightTextColor">Not Login</h1>
+                    
+                    <div class="Counter">
+                        <p>
+                            <i class="fs-medium fw-bold">
+                                <span id="notEmployeeLogin" class="forMarginIcon notEmployeeLogin">0</span> 
+                            </i>
+                        </p>
+                    </div>
+                </div>
+    
+
+            </div>
+
+           
+        </div>
+
+        <form id="droneForm" class="RadioButton">
+            <fieldset>
+                <div>
+                    <input type="radio" id="louie" name="drone" value="Csrd" checked onchange="updateSelectedKey(this)" />
+                    <label for="louie">CSRD</label>
+                </div>
+                <div>
+                    <input type="radio" id="huey" name="drone" value="Fin" onchange="updateSelectedKey(this)" />
+                    <label for="huey">FINANCIAL</label>
+                </div>
+                <div>
+                    <input type="radio" id="dewey" name="drone" value="Mis" onchange="updateSelectedKey(this)" />
+                    <label for="dewey">MIS</label>
+                </div>
+                <div>
+                    <input type="radio" id="dewey" name="drone" value="Aud" onchange="updateSelectedKey(this)" />
+                    <label for="dewey">AUDIT</label>
+                </div>
+        
+                <div>
+                    <input type="radio" id="louie" name="drone" value="Acc" onchange="updateSelectedKey(this)" />
+                    <label for="louie">MANAGEMENT</label>
+                </div>
+                <div>
+                    <input type="radio" id="louie" name="drone" value="C&C" onchange="updateSelectedKey(this)" />
+                    <label for="louie">CREDIT&CO</label>
+                </div>
+                
+                <div>
+                    <input type="radio" id="louie" name="drone" value="Grcd" onchange="updateSelectedKey(this)" />
+                    <label for="louie">GRCD</label>
+                </div>
+                <div>
+                    <input type="radio" id="louie" name="drone" value="Hr" onchange="updateSelectedKey(this)" />
+                    <label for="louie">HR&ADMIN</label>
+                </div>
+                <div>
+                    <input type="radio" id="louie" name="drone" value="M2" onchange="updateSelectedKey(this)" />
+                    <label for="louie">M2</label>
+                </div>
+                <div>
+                    <input type="radio" id="louie" name="drone" value="Op" onchange="updateSelectedKey(this)" />
+                    <label for="louie">OPERATIONS</label>
+                </div>
+                <div>
+                    <input type="radio" id="louie" name="drone" value="Pspmi" onchange="updateSelectedKey(this)" />
+                    <label for="louie">PSPMI</label>
+                </div>
+                <div>
+                    <input type="radio" id="louie" name="drone" value="Trans" onchange="updateSelectedKey(this)" />
+                    <label for="louie">TRANSPORTAION</label>
+                </div>
+
+        
+            </fieldset>
+        </form>
+
+
+            <div class="video-container">
+                <img id="videoElement" class="videoElement" src="{% url 'camera_feed' %}" alt="Real-Time Video Stream">
+            </div>
+
+
+            <div class="TableContainer">
+                <div class="table-container">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table id="defaultdatatable" class="table table-bordered table-hover table-striped tables defaultdatatable">
+                                <thead>
+                                    <tr>
+                                        <th class="fs-small fw-bold ">FULLNAME</th>
+                                        <th class="fs-small fw-bold">TIME IN</th>
+                                        <th class="fs-small fw-bold ">BREAK OUT</th>
+                                        <th class="fs-small fw-bold">BREAK IN</th>
+                                        <th class="fs-small fw-bold ">TIME OUT</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% comment %} {% for attendance in attendances|slice:":10"  %}
+                                    <tr>
+                                        <td class="fs-small fw-semi-bold ">{{ attendance.name }}</td>
+                                        <td class="fs-small fw-semi-bold">{{ attendance.timein }}</td>
+                                        <td class="fs-small fw-semi-bold ">{{ attendance.breakout }}</td>
+                                        <td class="fs-small fw-semi-bold">{{ attendance.breakin }}</td>
+                                        <td class="fs-small fw-semi-bold ">{{ attendance.timeout }}</td>
+                                    </tr>
+                                    {% endfor %} {% endcomment %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+
+
+
+       
+    </div>
+
+    <script>
+        function updateSelectedKey(radioButton) {
+            var selectedKey = radioButton.value;
+        
+            // Get CSRF token from cookie
+            var csrftoken = document.cookie.match(/csrftoken=([^;]+)/)[1];
+        
+            console.log("Selected key before AJAX request:", selectedKey);
+        
+            $.ajax({
+                type: "POST",
+                url: "/update_selected_key/",
+                data: {
+                    selected_key: selectedKey
+                },
+                headers: {
+                    "X-CSRFToken": csrftoken
+                },
+                success: function (response) {
+                    console.log("Selected key updated successfully");
+        
+                    // Refresh the video stream for the selected key
+                    var videoStream = document.getElementById("videoElement");
+                    videoStream.src = "/camera_feed/?selected_key=" + selectedKey;
+                },
+                error: function (error) {
+                    console.error("Error updating selected key", error);
+                }
+            });
+        }
+    </script>
+    
+  
+
+    <script>
+
+        function updateEarlyEmployeeCount(){
+            fetch('/employee_early/')
+                .then(response => response.json())
+                .then(data => {document.getElementById('earlyEmployeeCount').innerText = data.early_employees;
+                
+                });
+        }
+
+        updateEarlyEmployeeCount();
+
+        setInterval(updateEarlyEmployeeCount, 1000);
+
+    </script>
+
+
+    <script>
+        function updateLateEmployeeCount() {
+            fetch('/employee_late/')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('lateEmployeeCount').innerText = data.late_employees;
+                });
+        }
+    
+
+        updateLateEmployeeCount();
+    
+  
+        setInterval(updateLateEmployeeCount, 1000);  
+    </script>
+
+
+    
+    <script>
+
+        
+        
+
+        function updateEmployeeCount() {
+            fetch('/employee_count/')
+                .then(response => response.json())
+                .then(data => {
+                    const employeeCountElement = document.getElementById('employeeCount');
+                   
+                    if (parseInt(data.total_employees_count) > parseInt(employeeCountElement.innerText)) {
+                        document.getElementById('employeeCount').innerText = data.total_employees_count;                        
+                       
+                    }
+                   
+                });
+        }
+
+      
+        updateEmployeeCount();
+
+        setInterval(updateEmployeeCount, 1000);  
+    </script>
+
+
+    <script>
+        var video = document.getElementById('videoElement');
+        video.src = "{% url 'camera_feed' %}";
+        
+        video.onloadedmetadata = function() {
+            video.play();
+        };
+
+
+                toastr.options = {
+                    positionClass: 'toast-top-left',
+                    preventDuplicates: false,
+                    progressBar: true,
+                    showDuration: 1000,
+                    hideDuration: 2000,
+                    timeOut: 5000,
+                    extendedTimeOut: 1000,
+                    messageClass: 'toastSize',
+                };
+
+
+        var previousData = [];
+
+        function getName() {
+            return fetch('/get_name/')
+                .then(response => response.json())
+                .then(data => {
+                    return data.processed_name;
+                });
+        }
+        
+        function updateAttendance() {
+            // Call getName to get the processed_name data
+            getName().then(processedName => {
+                $.ajax({
+                    url: '{% url "get_attendance_data" %}',
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function (data) {
+                        var tableBody = $('#defaultdatatable tbody');
+        
+                        // Check if data has been added or updated
+                        if (!arraysEqual(data.attendances, previousData)) {
+                            var message = processedName;
+                            toastr.success(message);
+                        }
+        
+                        // Clear previous table data
+                        tableBody.empty();
+        
+                        data.attendances.forEach(function (attendance) {
+                            // Create a new table row for each attendance entry
+                            var row = $('<tr>');
+                            row.append('<td>' + attendance.name + '</td>');
+                            row.append('<td>' + attendance.timein + '</td>');
+                            row.append('<td>' + attendance.breakout + '</td>');
+                            row.append('<td>' + attendance.breakin + '</td>');
+                            row.append('<td>' + attendance.timeout + '</td>');
+                            tableBody.append(row);
+                        });
+        
+                        // Update previousData for the next comparison
+                        previousData = data.attendances.slice();
+                    },
+                    error: function (error) {
+                        console.error('Error fetching attendance data:', error);
+                    }
+                });
+            });
+        }
+        
+        // Call updateAttendance initially and set up the interval
+        updateAttendance();
+
+        // Compare two arrays for equality
+        function arraysEqual(arr1, arr2) {
+            return JSON.stringify(arr1) === JSON.stringify(arr2);
+        }
+
+        setInterval(updateAttendance, 100);
+    </script> 
+
+{% endblock content %}
+
+
+{% comment %} {% endblock content %} {% endcomment %}
+
+        {% comment %} <script>
+            var video = document.getElementById('videoElement');
+            video.src = '/camera_feed/';
+            
+            video.onloadedmetadata = function() {
+                video.play();
+            };
+        </script> {% endcomment %}

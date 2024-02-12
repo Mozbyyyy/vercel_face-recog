@@ -1,0 +1,49 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>djangoapp</title>
+    <link href="{% static 'css/bootstrap.min.css'%}" rel="stylesheet">
+    <link href= "{%static 'css/toastr.min.css'%}" rel="stylesheet">
+
+    <!-- DataTables JS -->
+
+    {% comment %} <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs5/dt-1.11.5/datatables.min.css"/>
+    <script type="text/javascript" src="https://cdn.datatables.net/v/bs5/dt-1.11.5/datatables.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/v/bs5/dt-1.11.5/datatables.bootstrap5.min.js"></script> {% endcomment %}
+
+    {% comment %} google icons {% endcomment %}
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+   
+    {% comment %} sweet alert {% endcomment %}
+    <script src="{% static 'js/sweetalert.js'%}"></script>
+    <script src="{% static 'js/ajax.js'%}"></script>
+    <script src="{%static 'js/toast.js' %}"></script>
+
+  </head>
+  <body>
+
+    {% comment %} {% include 'temp_myapp/navbar.html' %} {% endcomment %}
+
+
+    <div class="main-container">
+        {% block content %}
+        {% comment %} {% include "temp_myapp/navbar.html" with user_in_admin_group=user_in_admin_group %} {% endcomment %}
+          
+        {% endblock content %}
+    </div>
+
+
+
+
+    
+
+    <script src="{% static 'js/bootstrap.bundle.min.js'%}"></script>
+  </body>
+</html>

@@ -1,0 +1,26 @@
+:root{
+    --darkblue: #2c4050;
+    --clr-Primary-accent: #5EA061;
+    --clr-Secondary-accent: #55AF5A;
+
+
+    --clr-Primary-neutral: #373837;
+    --clr-Secondary-neutral: #4D4848;
+}
+
+
+.jgclogo{
+    font-weight: 500;
+    margin-left: 3rem;
+}
+.navbarbg{
+    color:white;
+    width: 100%;
+}
+.logoutlink{
+    margin-left: 3rem;
+    margin-right: 8rem;
+}
+.navbar{
+    background-color: var(--clr-Primary-accent);
+}

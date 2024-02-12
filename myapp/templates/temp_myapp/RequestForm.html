@@ -1,0 +1,288 @@
+{% extends "temp_myapp/base.html" %}
+{% load static %}
+
+{% block content %} 
+{% include 'temp_myapp/navbar.html' %}
+
+
+<link rel="stylesheet" type="text/css" href="{% static 'css/RequestForm.css' %}"> 
+
+    <div class="request-wrapper">
+
+            <h3 class="fs-tertiary fw-extra-bold text-clr-primary-accent">REQUEST FORM</h3>
+
+            <div class="request-container">
+
+                <div class="FormRequestContainer">
+
+                    <form class="FormRequest" method="post" action="{% url 'RequestForms' %}">
+                        {% csrf_token %}
+                        
+                        <div class="empcode">
+                            <label class="fs-small fw-bold form-field-clr" for="empcode">EMPLOYEE ID</label>
+                            <input type="text" name="Empcode" class="form-control" id="empcode" required>
+                            <ul class="search-list-style fs-small fw-bold" id="search-list"></ul>
+                        </div>
+                
+
+                        <div class="request">
+                            <label class="fs-small fw-bold form-field-clr" for="request">SELECT REQUEST</label>
+                            <select name="Request" class="form-select" id="request" required>
+                              {% for request in possible_request %}
+                                <option value="{{request}}">{{request}}</option>
+                                {%endfor%}
+                            </select>
+                          </div>
+    
+             
+                        <div class="out-time-date">
+                            <label class="fs-small fw-bold form-field-clr" for="out-time-date">SELECT OUT TIME & DATE</label>
+                            <input type="datetime-local" name="OutTimeDate" class="form-control" id="out-time-date" required>
+                        </div>
+
+                        <div class="in-time-date">
+                            <label class="fs-small fw-bold form-field-clr" for="in-time-date">SELECT IN TIME & DATE</label>
+                            <input type="datetime-local" name="InTimeDate" class="form-control" id="in-time-date" required >
+                        </div>
+
+                        <div class="requestdate">
+                            <label class="fs-small fw-bold form-field-clr" for="requestdate">Request Date</label>
+                            <input type="date" name="requestdate" class="form-control" id="requestdate" required>
+                        </div>
+                
+                        <div class="deductrange">
+                            <label class="fs-small fw-bold form-field-clr" for="deductrange">SELECT DEDUCT RANGE</label>
+                            <select name="DeductRange" class="form-select" id="deductrange" required >
+                                <option value="AM">Half Day, 7:00-12:00 AM </option>
+                                <option value="PM">Half Day, 13:00-16:00 PM </option>
+                                <option value="Whole">Whole Day</option>
+                            </select>
+                        </div>
+
+                        
+    
+    
+                        
+                        <div class="form-group">
+                            <div class="form-check">
+                              <input class="form-check-input custom-checkbox" type="checkbox" value="true" name="isapproved" id="invalidCheck">
+                              <label class="form-check-label text-maxwidth fs-small" for="invalidCheck">
+                                Checking this box indicates your approval of the employee's request, and you are required to provide comments.
+                              </label>
+                            </div>
+                          </div>
+
+
+                          <div class="remarks " id="remarksContainer">
+                            <label for="remarks"  class="fs-small fw-bold form-field-clr">Remarks:</label>
+                            <textarea name="remarks" id="remarks" class="form-control" rows="4" cols="50" required></textarea>
+                          </div>
+    
+                          <button type="submit" class="btn bg-clr-primary-accent text-clr-light-accent fw-semi-bold form-request-btn" name="add">Submit Form</button>
+                     </form>
+    
+
+                </div>
+                
+
+                 <div class="forthetable">
+                    <div class="content-wrapper employee-list-container">
+                        <div class="container-fluid">
+                    
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="card">
+                    
+                                        <div class="card-header">
+                    
+                                            <div class="row">
+                                                
+                                                
+                                                <div class="col-lg-12">
+                                                    <div class="d-flex justify-content-end">
+                                                        <form action="" method="post" class="d-flex">
+                                                            {% csrf_token %}
+                                                            <input type="date" class="form-control" name="searchquery" value="{{ query }}" placeholder="Select a date">
+                                                            <button class="btn-style" name="search">Search</button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                                          
+                                            
+                    
+                                        </div>
+                    
+                                        <div class="card-body">
+                                            <div class="table-responsive">
+                                                <table id="defaultdatatable" class="table table-bordered table-hover table-striped tables">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Lastname</th>
+                                                            <th>Request</th>
+                                                            <th>Out-Time-Date</th>
+                                                            <th>In-Time-Date</th>
+                                                            <th>Actions</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {% for forms in form_list %}
+                                                        <tr>
+                    
+                                                            <td>{{ forms.EmpCode.Lastname }}</td>
+                                                            <td>{{ forms.SelectRequest }}</td>
+                                                            <td>{{ forms.BeginTimeOff }}</td>
+                                                            <td>{{ forms.ConcludeTimeOff }}</td>
+                                                            <td>
+                                                                {% comment %} <span class="material-symbols-outlined btn btn-success" >
+                                                                    wysiwyg
+                                                                    </span> {% endcomment %}
+                                                        
+                                                                  
+                    
+                                                                    <span class="material-symbols-outlined btn btn-delete delete-btn" data-bs-toggle="modal" data-bs-target="#deleteEmployeeModal_{{forms.FormID}}">
+                                                                        delete
+                                                                        </span>
+                                                              
+                    
+                                                                    
+                                                            </td>
+                    
+                                                        </tr>
+                                              
+                                                
+                                            </div>
+                    
+                                
+                          <!-- delete MODAL EMPLOYEE -->
+                          <div class="modal fade" id="deleteEmployeeModal_{{forms.FormID}}" tabindex="-1" aria-labelledby="deleteEmployeeModal_{{forms.FormID}}" aria-hidden="true">
+                            <div class="modal-dialog">
+                              <form action="{% url 'RequestForms' %}"method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="FormID" value="{{forms.FormID}}">
+                                <input type="hidden" name="EmpCode" value="{{forms.EmpCode_id}}">
+                                <input type="hidden" name="Range" value="{{forms.Range}}">
+                                <input type="hidden" name="RequestType" value="{{forms.SelectRequest}}">
+             
+                            
+                              <div class="modal-content">
+                                <div class="modal-header">
+                                  <h1 class="modal-title fs-5" id="deleteEmployeeModal_{{forms.FormID}}">Delete Employee</h1>
+                                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                  <div class="delete-context">
+                    
+                                    <p class="fs-medium fw-bold">ARE YOU SURE YOU WANT TO DELETE THE RECORD OF this person?</p>
+                                    <p class="fs-medium fw-bold" style="color: #FF5964;"> {{forms.EmpCode.Firstname}} {{forms.EmpCode.Lastname}} </p>
+                    
+                                  </div>
+                                </div>
+                                <div class="modal-footer">
+                                  <button type="button" class="btn btn-cancel" data-bs-dismiss="modal">Cancel</button>
+                                  <button type="submit" class="btn btn-delete" name="delete">Delete Employee</button>
+                                </div>
+                              </div>
+                            </form>
+                            </div>
+                          </div>
+                            </form>
+                            </div>
+                          </div>
+      
+      
+                      {% endfor %}
+                      </tbody>
+                      </table>
+      
+      
+                      {% comment %} MODALS {% endcomment %}
+      
+   
+                                            <div class="d-flex justify-content-start">
+                                                <nav aria-label="Page navigation example">
+                                                    <ul class="pagination">
+                                                        {% if form_list.has_previous %}
+                                                            <li class="page-item"><a class="btn-pagination" href="?page=1">First</a></li>
+                                                            <li class="page-item"><a class="btn-pagination" href="?page={{ form_list.previous_page_number }}">Previous</a></li>
+                                                        {% endif %}
+                                            
+                                                        {% for i in form_list.paginator.page_range %}
+                                                            <li class="page-item{% if form_list.number == i %} active{% endif %}">
+                                                                <a class="btn-pagination " href="?page={{ i }}">{{ i }}</a>
+                                                            </li>
+                                                        {% endfor %}
+                                            
+                                                        {% if form_list.has_next %}
+                                                            <li class="page-item"><a class="btn-pagination" href="?page={{ form_list.next_page_number }}">Next</a></li>
+                                                            <li class="page-item"><a class="btn-pagination" href="?page={{ form_list.paginator.num_pages }}">Last</a></li>
+                                                        {% endif %}
+                                                    </ul>
+                                                </nav>
+                                            </div>
+                                            
+                                        </div>
+                                    </div>
+                                </div>
+                            </div> <!-- row -->
+      
+                        </div> <!-- container-fluid -->
+                 </div>
+                 
+
+              
+
+            </div>
+    </div>
+
+
+<script src="{% static 'js/RequestForm.js' %}"></script>
+<script src="{% static 'js/pagination.js' %}"></script>
+{% if messages%}
+    {% for message in messages%}
+        {%if 'added' in message.tags%}
+            <script>
+                swal({
+                    title: "Approved!",
+                    text: "{{ message }}",
+                    icon: "success",
+                });
+            </script>
+        {%elif 'update' in message.tags%}
+        <script>
+            swal({
+                title: "Updated!",
+                text: "{{message}}",
+                icon: "success",
+            })
+        </script>    
+        {% elif 'delete' in message.tags %}
+        <script>
+            swal({
+                title: "Deleted!",
+                text: "{{ message }}",
+                icon: "success",
+            });
+        </script>
+        {% elif 'NoLeave' in message.tags %}
+        <script>
+            swal({
+                title: "Warning!",
+                text: "{{ message }}",
+                icon: "warning",
+            });
+        </script>
+        {% elif 'deleted_request' in message.tags %}
+        <script>
+            swal({
+                title: "Request Deleted!",
+                text:"{{message}}",
+                icon:"success"
+            })
+        </script>
+        {%endif%}
+    {%endfor%}
+{%endif%}
+
+
+{% endblock content %}

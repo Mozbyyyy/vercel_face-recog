@@ -1,0 +1,570 @@
+
+{% extends "temp_myapp/base.html" %}
+{% load static %}
+{% block content %}
+
+{% include 'temp_myapp/navbar.html' %}
+
+<link rel="stylesheet" type="text/css" href="{% static 'css/addemployee.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'css/facedetection.css' %}"> 
+<script src="{% static 'js/datatable.js' %}"></script>
+
+<div class="content-wrapper employee-list-container">
+    <div class="container-fluid">
+        <div class="row pt-2 pb-2">
+            <div class="col-sm-12 mt-3">
+                <h5 class="page-title fs-tertiary fw-bold text-clr-primary-accent">EMPLOYEE LIST</h5>
+
+                
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+
+                    <div class="card-header">
+
+                        <div class="row">
+                            <div class="col-lg-10">
+                                <div class="d-flex justify-content-start">
+                                    <button type="button" class=" btn-style btn-round waves-effect waves-light m-1" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
+                                        <i class="fa fa-plus"></i> <span>&nbsp;ADD EMPLOYEE</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            
+                            <div class="col-lg-2">
+                                <div class="d-flex justify-content-end">
+                                    <form action="" method="post" class="d-flex">
+                                        {% csrf_token %}
+                                        <input type="search" class="form-control me-2" name="searchquery" value="{{ query }}">
+                                        <button class="btn-style" name="search">Search</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                                      
+                        
+
+                    </div>
+
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table id="defaultdatatable" class="table table-bordered table-hover table-striped tables">
+                                <thead>
+                                    <tr>
+                                        <th>CODE</th>
+                                        <th>FIRST NAME</th>
+                                        <th>MIDDLE INITIAL</th>
+                                        <th>LAST NAME</th>
+                                        <th>BRANCH</th>
+                                        <th>Dept.</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for user in employee_list %}
+                                    <tr>
+
+                                        <td>{{ user.EmpCode }}</td>
+                                        <td>{{ user.Firstname }}</td>
+                                        <td>{{ user.Middlename }}</td>
+                                        <td>{{ user.Lastname }}</td>
+                                        <td>{{ user.BranchCode_id }}</td>
+                                        <td>{{user.Department}}</td>
+                                        
+                                        <td>
+                                            {% comment %} <span class="material-symbols-outlined btn btn-success" >
+                                                wysiwyg
+                                                </span> {% endcomment %}
+                                                
+                                           <span class="material-symbols-outlined btn btn-edit edit-btn" data-bs-toggle="modal" data-emp-code="{{ user.EmpCode }}" data-bs-target="#updateEmployeeModal_{{user.EmpCode}}">
+                                                edit
+                                                </span>
+                                         
+
+                                            <span class="material-symbols-outlined btn btn-delete delete-btn" data-bs-toggle="modal" data-bs-target="#deleteEmployeeModal_{{user.EmpCode}}">
+                                                    delete
+                                                    </span>
+
+                                                
+                                                    <span class="material-symbols-outlined btn btn-info history-btn"
+                                                          data-bs-toggle="modal"
+                                                          data-bs-target="#redirectHistory_{{user.EmpCode}}">
+                                                        <a class="a-hist" style="color: white;" href="{% url 'EmployeeDetails' user.EmpCode %}">work_history</a>
+                                                    </span>
+                                                    
+                                        </td>
+
+                                    </tr>
+                          
+                            
+                        </div>
+
+
+
+
+
+
+
+
+<!-- update EMPLOYEE modal -->
+<div class="modal fade" id="updateEmployeeModal_{{ user.EmpCode }}" data-emp-code="{{ user.EmpCode }} " tabindex="-1" aria-labelledby="updateEmployeeModal_{{user.EmpCode}}" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <form id="updateEmployeeForm" action="{% url 'addemployee' %}" method="post">
+        {% csrf_token %}
+   
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="updateEmployeeModal_{{user.EmpCode}}">Edit Employee</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+        
+          <div class="firstname">
+            <label for="firstname" >First Name</label>
+            <input type="text" name="Firstname" class="form-control"value = "{{user.Firstname}}" id="firstname" required>
+          </div>
+
+          <div class="middlename">
+            <label for="middlename" >Middle Name</label>
+            <input type="text" name="Middlename" class="form-control"value = "{{user.Middlename}}" id="middlename" required>
+          </div>
+
+          <div class="lastname">
+            <label for="lastname" >Last Name</label>
+            <input type="text" name="Lastname" class="form-control"value = "{{user.Lastname}}" id="lastname" required>
+          </div>
+
+          <div class="dateofbirth">
+            <label for="datepicker">Employment Date</label>
+            <input type="date" name="DateofBirth" class="form-control" value="{{ user.DateofBirth|date:'Y-m-d' }}" id="datepicker" required>
+        </div>
+
+          <div class="bloodtype">
+            <label for="bloodtype" >Blood Type</label>
+            <input type="text" name="BloodType" class="form-control"value = "{{user.BloodType}}" id="bloodtype">
+          </div>
+
+          <div class="gender">
+            <label for="gender">Gender</label>
+            <select name="Gender" class="form-select" id="gender" required>
+              {% for gender in possible_gender %}
+                <option value="{{gender}}"{% if gender == user.Gender %} selected{%endif%}>{{gender}}</option>
+                {%endfor%}
+            </select>
+          </div>
+
+          <div class="civilstatus">
+            <label for="civilstatus">Civil Status</label>
+            <select name="CivilStatus" class="form-select" id="civilstatus" required>
+                {% for civil_status in possible_civil_status%}
+                <option value="{{civil_status}}" {% if civil_status == user.CivilStatus %} selected{%endif%}>{{civil_status}}</option>
+                {%endfor%}
+            </select>
+          </div>
+
+          <div class="address">
+            <label for="address" >Address</label>
+            <input type="text" name="Address" class="form-control" value = "{{user.Address}}" id="address" required>
+          </div>
+
+          <div class="position">
+            <label for="position" >Position</label>
+            <input type="text" name="Position" class="form-control" value = "{{user.Position}}" id="position" required>
+          </div>
+
+          <div class="employmentdate">
+            <label for="employmentdate">Employment Date</label>
+            <input type="date" name="EmployementDate" class="form-control" value="{{ user.EmployementDate|date:'Y-m-d' }}" id="employmentdate" required>
+        </div>
+
+          <div class="empcode">
+            <label for="empcode" >Employee Code</label>
+            <input type="text" name="EmpCode"  class="form-control" value="{{user.EmpCode}}" readonly>
+          </div>
+
+          <div class="employmentstatus">
+            <label for="employmentStatus">Employment Status</label>
+            <select name="EmploymentStatus" class="form-select" id="employmentStatus" required>
+                {% for status in possible_statuses %}
+                    <option value="{{ status }}" {% if status ==  user.EmploymentStatus %}selected{% endif %}>{{ status }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="department">
+          <label for="department">Department</label>
+          <select name="Department" class="form-select" id="department" required>
+            {% for department in possible_department %}
+            <option value="{{ department }}" {% if department ==  user.Department %}selected{% endif %}>{{ department }}</option>
+        {% endfor %}
+          </select>
+        </div>
+
+        
+          <div class="branch">
+            <label for="Branch">Branch</label>
+            <select name="BranchCode_id" class="form-select" id="Branch" required>
+                {% for branch in branches %}
+                    <option value="{{ branch.BranchCode }}" {% if branch.BranchCode == user.BranchCode_id %}selected{% endif %}>
+                        {{ branch.BranchCode }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="EditLeaves" id="EditLeaves">
+
+          <div class="leavesBlock">
+             <h5 class="EditLeaveTitle">Edit Leaves for Branch Transfer</h5>
+
+              <div class="leavesInline">
+                
+                <div class="RemainingLeaves">
+                  <label for="RemainingLeaves" >Remaining Leaves</label>
+                  <input type="text" name="remainingleaves" class="form-control" value="{{ getVlSl.Vacation }}" id="RemainingLeaves" readonly>
+                </div>
+                
+
+                <div class="Vacation">
+                  <label for="Vacation" >Vacation Leave</label>
+                  <input type="text" name="vacation" class="form-control" id="Vacation" >
+                </div>
+                
+                <div class="Sick">
+                  <label for="Sick" >Sick Leave</label>
+                  <input type="text" name="sick" class="form-control" id="Sick" >
+                </div>
+
+              </div>
+            
+        </div>
+         
+
+        </div>
+       
+     
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-cancel" data-bs-dismiss="modal" id="cancelButton">Cancel</button>
+          <button type="submit" class="btn btn-submit" name="update" data-user-id="{{user.EmpCode}}">Update Employee</button>
+        </div>
+      </div>
+    </form>
+    </div>
+  </div>
+
+
+
+
+      <!-- delete MODAL EMPLOYEE -->
+      <div class="modal fade" id="deleteEmployeeModal_{{user.EmpCode}}" tabindex="-1" aria-labelledby="deleteEmployeeModal_{{user.EmpCode}}" aria-hidden="true">
+        <div class="modal-dialog">
+          <form action="{% url 'addemployee' %}"method="post">
+            {% csrf_token %}
+            <input type="hidden" name="EmpCode" value="{{user.EmpCode}}">
+        
+          <div class="modal-content">
+            <div class="modal-header">
+              <h1 class="modal-title fs-5" id="deleteEmployeeModal_{{user.EmpCode}}">Delete Employee</h1>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <div class="delete-context">
+
+                <p class="fs-medium fw-bold">ARE YOU SURE YOU WANT TO DELETE THE RECORD OF this person?</p>
+                <p class="fs-medium fw-bold" style="color: #FF5964;"> {{user.Firstname}} {{user.Lastname}} </p>
+
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-cancel" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" class="btn btn-delete" name="delete">Delete Employee</button>
+            </div>
+          </div>
+        </form>
+        </div>
+      </div>
+
+
+  {% endfor %}
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+{% comment %} MODALS {% endcomment %}
+
+
+<!-- ADD EMPLOYEE Modal -->
+<div class="modal fade" id="addEmployeeModal" tabindex="-1" aria-labelledby="addEmployeeModal" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <form action="{% url 'addemployee' %}"method="post">
+        {% csrf_token %}
+  
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="addEmployeeModal">Insert New</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+
+
+          <div class="empcode">
+            <label for="empcode" >Employee Code</label>
+            <input type="text" name="EmpCode" class="form-control" id="empcode" required>
+          </div>
+          
+          <div class="firstname">
+            <label for="firstname" >First Name</label>
+            <input type="text" name="Firstname" class="form-control" id="firstname" required>
+          </div>
+
+          <div class="middlename">
+            <label for="middlename" >Middle Name</label>
+            <input type="text" name="Middlename" class="form-control" id="middlename" required>
+          </div>
+
+          <div class="lastname">
+            <label for="lastname" >Last Name</label>
+            <input type="text" name="Lastname" class="form-control" id="lastname" required>
+          </div>
+
+          <div class="dateofbirth">
+            <label for="datepicker">Date of Birth</label>
+            <input type="date" name="DateofBirth" class="form-control" id="datepicker" required>
+          </div>
+
+          <div class="bloodtype">
+            <label for="bloodtype" >Blood Type</label>
+            <input type="text" name="BloodType" class="form-control" id="bloodtype">
+          </div>
+
+          <div class="gender">
+            <label for="gender">Gender</label>
+            <select name="Gender" class="form-select" id="gender" required>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+            </select>
+          </div>
+
+          <div class="civilstatus">
+            <label for="civilstatus">Civil Status</label>
+            <select name="CivilStatus" class="form-select" id="civilstatus" required>
+              {% for civil_status in possible_civil_status %}
+              <option value="{{ civil_status }}">{{ civil_status }}</option>
+          {% endfor %}
+            </select>
+          </div>
+
+          <div class="address">
+            <label for="address" >Address</label>
+            <input type="text" name="Address" class="form-control" id="address" required>
+          </div>
+
+          <div class="position">
+            <label for="position" >Position</label>
+            <input type="text" name="Position" class="form-control" id="position" required>
+          </div>
+
+          <div class="employmentdate">
+            <label for="employmentdate">Employment Date</label>
+            <input type="date" name="EmployementDate" class="form-control" id="employmentdate" required>
+          </div>
+
+          <div class="employmentstatus">
+            <label for="employmentStatus">Employment Status</label>
+            <select name="EmploymentStatus" class="form-select" id="employmentStatus" required>
+              {%for status in possible_statuses%}
+              <option value="{{status}}">{{status}}</option>
+              {%endfor%}
+            </select>
+          </div>
+
+          <div class="department">
+            <label for="department">Department</label>
+            <select name="Department" class="form-select" id="department" required>
+              {% for department in possible_department %}
+              <option value="{{ department }}">{{ department }}</option>
+          {% endfor %}
+            </select>
+          </div>
+
+          <div class="branch">
+            <label for="Branch">Branch</label>
+            <select name="BranchCode_id" class="form-select" id="Branch" required>
+              {% for branch in branches %}
+              <option value="{{ branch.BranchCode }}">{{branch.BranchCode}}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+        
+
+         
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="submit" class="btn btn-primary" name="add">Add New Employee</button>
+        </div>
+      </div>
+    </form>
+    </div>
+  </div>
+  
+
+
+ 
+
+
+                                                
+                            <div class="d-flex justify-content-start">
+                              <nav aria-label="Page navigation example">
+                                  <ul class="pagination">
+                                      {% if employee_list.has_previous %}
+                                          <li class="page-item"><a class="btn-pagination" href="?page=1">First</a></li>
+                                          <li class="page-item"><a class="btn-pagination" href="?page={{ employee_list.previous_page_number }}">Previous</a></li>
+                                      {% endif %}
+      
+                                      {% for i in employee_list.paginator.page_range %}
+                                          {% if i > employee_list.number|add:'-3' and i < employee_list.number|add:'3' %}
+                                              <li class="page-item{% if employee_list.number == i %} active{% endif %}">
+                                                  <a class="btn-pagination " href="?page={{ i }}">{{ i }}</a>
+                                              </li>
+                                          {% endif %}
+                                      {% endfor %}
+      
+                                      {% if employee_list.has_next %}
+                                          <li class="page-item"><a class="btn-pagination" href="?page={{ employee_list.next_page_number }}">Next</a></li>
+                                          <li class="page-item"><a class="btn-pagination" href="?page={{ employee_list.paginator.num_pages }}">Last</a></li>
+                                      {% endif %}
+                                  </ul>
+                              </nav>
+                          </div>
+                        
+                        
+                    </div>
+                </div>
+            </div>
+        </div> <!-- row -->
+
+    </div> <!-- container-fluid -->
+</div>
+
+
+<script src="{% static 'js/pagination.js' %}"></script>
+
+
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+
+      var historyButtons = document.querySelectorAll('.history-btn');
+
+      historyButtons.forEach(function(button) {
+          button.addEventListener('click', function(event) {
+              event.stopPropagation();
+              var userId = button.getAttribute('data-user-id');
+
+      var redirectUrl = '/EmployeeDetails/' + userId + '/';
+
+      window.location.href = redirectUrl;
+                });
+            });
+
+  });
+</script>
+
+<script>
+$(document).ready(function () {
+  $('.EditLeaves').hide();
+
+  var originalBranchValues = {};
+  $('.branch select').each(function () {
+    var empCode = $(this).closest('.modal').data('emp-code');
+    originalBranchValues[empCode] = $(this).val();
+  });
+
+  $('.branch select').change(function () {
+    var empCode = $(this).closest('.modal').data('emp-code');
+    if ($(this).val() !== originalBranchValues[empCode]) {
+      $(this).closest('.modal').find('.EditLeaves').show();
+    } else {
+      $(this).closest('.modal').find('.EditLeaves').hide();
+   
+      $('.Vacation, .Sick').removeAttr('required');
+    }
+  });
+
+  $('.branch select').each(function () {
+    var empCode = $(this).closest('.modal').data('emp-code');
+    if ($(this).val() === originalBranchValues[empCode]) {
+      $(this).closest('.modal').find('.EditLeaves').hide();
+   
+      $('.Vacation, .Sick').removeAttr('required');
+    }
+  });
+
+  $('#cancelButton').click(function () {
+    $('.branch select').each(function () {
+      var empCode = $(this).closest('.modal').data('emp-code');
+
+      $(this).val(originalBranchValues[empCode]);
+
+      if ($(this).val() === originalBranchValues[empCode]) {
+        $(this).closest('.modal').find('.EditLeaves').hide();
+        $('.Vacation, .Sick').removeAttr('required');
+      }
+    });
+  });
+});
+</script>
+
+
+
+
+{% if messages %}
+    {% for message in messages %}
+        {% if 'added' in message.tags %}
+            <script>
+                swal({
+                    title: "Added!",
+                    text: "{{ message }}",
+                    icon: "success",
+                });
+            </script>
+        {% elif 'updated' in message.tags %}
+            <script>
+                swal({
+                    title: "Updated!",
+                    text: "{{ message }}",
+                    icon: "success",
+                });
+            </script>
+        {% elif 'delete' in message.tags %}
+        <script>
+            swal({
+                title: "Deleted!",
+                text: "{{ message }}",
+                icon: "success",
+            });
+        </script>
+        {% endif %}
+    {% endfor %}
+{% endif %}
+
+
+
+
+
+{% endblock content %}
+

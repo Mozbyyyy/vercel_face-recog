@@ -1,0 +1,182 @@
+{% extends "temp_myapp/base.html" %}
+{% load static %}
+
+{% block content %} 
+{% include 'temp_myapp/navbar.html' %}
+
+
+<link rel="stylesheet" type="text/css" href="{% static 'css/BranchList.css' %}"> 
+
+    <div class="branch-detail-wrapper">
+        <a class="back" href="{% url 'BranchList' %}"><span class="material-symbols-outlined">
+            arrow_back
+            </span></a>
+        <div class="branch-details-container">
+
+            <div class="branch-details-main">
+
+                <div class="branch-image-container">
+
+              
+                    <div class="branch-image">
+                        <div class="branch-card"></div>
+                        <div class="branch-card"></div>
+                        {% if branch.BranchImage %}
+                        <div style="background-image: url('{{ branch.BranchImage.url }}');" class="branch-card"></div>
+                        {% else %}
+                        <div class="branch-card"><span class="no_image_BranchDetails fs-medium fw-bold">UPLOAD IMAGE</span></div>
+                        {% endif %}
+                    </div>
+        
+                    <div class="branch-info text-center">
+                        <h3 class="fs-medium fw-bold">{{branch.Company}}</h3>
+                        <h3 class="fs-medium fw-bold text-clr-primary-accent branch-text-clr">{{branch.BranchCode}}</h3>
+                    </div>
+                </div>
+                
+                <div class="branch-info2">
+                            
+                    <div class="emp-num text-center">
+                        <h6 class="fs-medium fw-extra-bold">Employees</h6>
+                        <h6 class="fs-medium fw-extra-bold branch-text-clr">{{employee_count}}</h6>
+                    </div>
+                    <div class="emp-loc text-center">
+                        <h6 class="fs-medium fw-bold">Branch Location</h6>
+                        <h6 class="fs-medium fw-bold branch-text-clr">{{branch.Location}}</h6>
+                    </div>
+                        
+                   
+    
+                </div>
+
+            </div> 
+
+           
+            
+
+
+            <div class="branch-members">
+
+                <div class="branch-head">
+                    <div class="bg-profile-picture"><img src="" alt=""></div>
+                    
+                    <div class="code-name">
+                        <h6 class="fs-medium fw-extra-bold">EMB606</h6>
+                        <h6 class="fs-medium fw-bold">Jane Doe Dela Cruz</h6>
+                    </div>
+    
+                    <h5 class="position fs-medium fw-semi-bold">Branch Head</h5>
+    
+                </div>
+
+                <h3 class="fs-tertiary fw-bold">MEMBERS OF THE BRANCH</h3>
+                
+                <div class="members-list">
+
+                    <div class="content-wrapper employee-list-container">
+                        <div class="container-fluid">
+                    
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="card">
+                    
+                                        <div class="card-header">
+                    
+                                            <div class="row">
+                    
+                                                
+                                                <div class="col-lg-12">
+                                                    <div class="d-flex justify-content-end">
+                                                        <form action="" method="post" class="d-flex">
+                                                            {% csrf_token %}
+                                                            <input type="text" class="form-control" name="searchquery" value="{{ query }}" placeholder="Search Name" >
+                                                            <button class="btn-style" name="search">Search</button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                                          
+                                            
+                    
+                                        </div>
+                    
+                                        <div class="card-body">
+                                          
+
+                                            <div id="employee-list-container" class="table-responsive">
+                                                <table id="defaultdatatable" class="table table-bordered table-hover table-striped tables">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Code</th>
+                                                            <th>Fullname</th>
+                                                            <th>Status</th>
+                                                            <th>Position</th>
+                                                            <th>Dept.</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {% for emplist in employee_list %}
+                                                        <tr>
+                                                            <td>{{ emplist.EmpCode }}</td>
+                                                            <td>{{ emplist.Firstname }}{{ emplist.Lastname }}</td>
+                                                            <td>{{ emplist.EmploymentStatus }}</td>
+                                                            <td>{{ emplist.Position }}</td>
+                                                            <td>{{ emplist.Department }}</td>
+                                                        </tr>
+                                                        {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+
+                                           
+                            <div class="d-flex justify-content-start">
+                                <nav aria-label="Page navigation example">
+                                    <ul class="pagination">
+                                        {% if employee_list.has_previous %}
+                                            <li class="page-item"><a class="btn-pagination" href="?page=1">First</a></li>
+                                            <li class="page-item"><a class="btn-pagination" href="?page={{ employee_list.previous_page_number }}">Previous</a></li>
+                                        {% endif %}
+        
+                                        {% for i in employee_list.paginator.page_range %}
+                                            {% if i > employee_list.number|add:'-3' and i < employee_list.number|add:'3' %}
+                                                <li class="page-item{% if employee_list.number == i %} active{% endif %}">
+                                                    <a class="btn-pagination " href="?page={{ i }}">{{ i }}</a>
+                                                </li>
+                                            {% endif %}
+                                        {% endfor %}
+        
+                                        {% if employee_list.has_next %}
+                                            <li class="page-item"><a class="btn-pagination" href="?page={{ employee_list.next_page_number }}">Next</a></li>
+                                            <li class="page-item"><a class="btn-pagination" href="?page={{ employee_list.paginator.num_pages }}">Last</a></li>
+                                        {% endif %}
+                                    </ul>
+                                </nav>
+                            </div>
+                                            
+                                        </div>
+                                    </div>
+                                </div>
+                            </div> <!-- row -->
+      
+                        </div> <!-- container-fluid -->
+
+                </div>
+                
+    
+            </div>
+
+        </div>
+        
+    </div>
+
+
+    
+<script src="{% static 'js/BranchDetails.js' %}"></script>
+<script src="{% static 'js/pagination.js' %}"></script>
+
+
+{% endblock content %}
+
+
+{% comment %} {% endblock content %} {% endcomment %}
+

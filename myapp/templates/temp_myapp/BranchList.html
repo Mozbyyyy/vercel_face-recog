@@ -1,0 +1,68 @@
+{% extends "temp_myapp/base.html" %}
+{% load static %}
+
+{% block content %} 
+{% include 'temp_myapp/navbar.html' %}
+
+
+<link rel="stylesheet" type="text/css" href="{% static 'css/BranchList.css' %}"> 
+    <div class="branch-wrapper">
+
+        <div class="branch-header">
+
+            <h3 class="fs-secondary fw-extra-bold text-clr-primary-accent">Branch Offices</h3>
+
+            <div class="search-bar">
+
+                <input type="text" class="form-control" name="search-bar"  placeholder="Search Branch ...">
+                <!-- <button class="btn-style" name="search" id="search-input">Search</button> -->
+
+            </div>
+            
+        </div>
+
+        <!-- End of Branch Head -->
+        <div class="arrow-container">
+
+            <div class="arrows" alt="Left" id="leftScroll"><span class="material-symbols-outlined">
+                arrow_left_alt
+                </span>
+            </div>
+            <div class="arrows" alt="Right" id="rightScroll"><span class="material-symbols-outlined">
+                arrow_right_alt
+                </span></div>
+            </div>
+            
+        </div>
+       
+
+      <!-- Start of Branch card Display -->
+      <div class="Branch-Cards snap-inline">
+                
+        {% for branch in branches %}
+            <div class="Branch-card-style ">
+                {% if branch.BranchImage %}
+                <div style="background-image: url('{{ branch.BranchImage.url }}');" class="branch-pic"></div>
+                {% else %}
+                <div class="branch-pic"><span class="no_image_BranchList fs-small">Upload Image</span></div>
+               {% endif %}
+               
+                <input type="hidden" class="fs-small-abbr" name="EmpCode_id" value="{{ branch.abbr }}">
+                <div class="branch-details">
+                    <h4 class="fs-small fw-bold">{{branch.Company}} <span style="color: #55AF5A;">({{branch.Location}})</span></h4>
+                    <button class="btn-style btn-adj fs-small" name="search"><a style="color: white;" href="{% url 'BranchDetails' branch.BranchCode %}">Visit</a></button>
+                    
+                </div>
+                
+              
+            </div>
+            {% endfor %}
+
+    </div>
+
+    
+
+    
+    <script src="{% static 'js/BranchList.js' %}"></script>
+
+{% endblock content %}

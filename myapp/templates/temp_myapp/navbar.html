@@ -1,0 +1,97 @@
+{% load static %}
+{% block content %}
+<head>
+  <link rel="stylesheet" type="text/css" href="{% static 'css/navbar.css' %}">
+  <link rel="stylesheet" type="text/css" href="{% static 'css/facedetection.css' %}"> 
+</head>
+
+<nav class="navbar navbar-expand-lg p-3 christmas-nav">
+    <div class="container-fluid">
+      <a class="navbar-brand jgclogo text-white fw-extra-bold fs-tertiary" href="{% url 'home' %}">JGC DTR</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNavDropdown">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item" style="visibility:hidden;">
+            <a class="nav-link active text-white" aria-current="page" href="#">ADD EMPLOYEE</a>
+          </li>
+      
+          <!-- This will be hidden for users in the "users" group -->
+       
+          <li class="nav-item" style="visibility:hidden;">
+            <a class="nav-link text-white" href="#">ADD BRANCH</a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link text-white fw-semi-bold" href="{% url 'facedetection' %}">FACE RECOGNITION</a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link text-white fw-semi-bold" href="{% url 'RequestForms' %}">LEAVE & TRAVEL COORDINATION</a>
+          </li>
+        
+        
+        
+          {% if user.is_authenticated and user.is_superuser %}
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              MEMBERS & SITES
+            </a>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="{% url 'addemployee' %}">Employee List</a></li>
+              <li><a class="dropdown-item" href="{% url 'BranchList' %}">Visit Branch</a></li>
+  
+            </ul>
+          </li>
+          {% endif %}
+
+
+          <li class="nav-item">
+            <a class="nav-link text-white logoutlink fw-semi-bold" data-bs-toggle="modal" data-bs-target="#logoutaccount">SIGN OUT</a>
+          </li>
+
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+
+
+
+
+
+  <!-- logout modal -->
+
+
+  <div class="modal fade" id="logoutaccount" tabindex="-1" aria-labelledby="logoutaccount" aria-hidden="true">
+    <div class="modal-dialog">
+      <form action="{% url 'logout' %}" method="post">
+        {% csrf_token %}
+  
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="logoutaccount"></h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+        <h5>Are you sure you want to logout?</h5>
+         
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-cancel" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-delete">Sign Out</button>
+        </div>
+      </form>
+      </div>
+  
+    </div>
+
+  </div>
+
+  
+
+
+
+      
+{% endblock content %}
