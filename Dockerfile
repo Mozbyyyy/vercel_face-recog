@@ -15,7 +15,6 @@ RUN apt-get update && apt-get install -y \
     libzbar-dev && \
     rm -rf /var/lib/apt/lists/*
 
-RUN pip install dlib
 
 COPY requirements.txt requirements.txt
 
