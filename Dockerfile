@@ -15,6 +15,8 @@ RUN apt-get update && apt-get install -y \
     libzbar-dev && \
     rm -rf /var/lib/apt/lists/*
 
+RUN pip install face_recognition
+RUN pip install dlib
 
 COPY requirements.txt requirements.txt
 
