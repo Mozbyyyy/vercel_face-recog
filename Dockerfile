@@ -1,14 +1,11 @@
-FROM python:3.11-slim-buster
+# First Stage
+FROM python:3.11-slim AS builder
 
-
-# Set environment variables
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-
-# Set working directory
 WORKDIR /app
-# Update repositories and install necessary build tools
+
 RUN apt-get update && apt-get install -y \
     cmake \
     make \
@@ -19,14 +16,28 @@ RUN apt-get update && apt-get install -y \
     libzbar-dev && \
     rm -rf /var/lib/apt/lists/*
 
-
 COPY requirements.txt requirements.txt
 
-# Install Python dependencies
-RUN pip3 install -r requirements.txt
+# Create a virtual environment and install dependencies
+RUN python -m venv /venv
+RUN /venv/bin/pip install --upgrade pip
+RUN /venv/bin/pip install -r requirements.txt
 
+# Second Stage
+FROM python:3.11-slim
 
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+WORKDIR /app
+
+# Copy the virtual environment from the builder stage
+COPY --from=builder /venv /venv
+
+# Copy the application code
 COPY . .
 
+# Set the PATH to include the virtual environment
+ENV PATH="/venv/bin:$PATH"
 
 CMD ["gunicorn", "--bind", "0.0.0.0:8000", "myproject.wsgi"]
