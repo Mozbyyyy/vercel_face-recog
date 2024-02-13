@@ -7,27 +7,23 @@ from django.urls import reverse_lazy
 from .models import Employee, Branches,DailyRecord,AttendanceCount, temporray
 import logging
 from django.shortcuts import render, get_object_or_404
-
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import JsonResponse, HttpRequest
 from django.views.decorators.csrf import csrf_exempt 
 from django.db.models import Q, F, When, Case, Value, TimeField
 from django.contrib import messages
 from django.http import HttpResponseRedirect
-# from .UserTesting import main
 import base64
 import cv2
 from django.http import StreamingHttpResponse
-
-import face_recognition
 import os
 import dlib
 import math
+import face_recognition
 import numpy as np
 from functools import lru_cache
 import time
 from concurrent.futures import ThreadPoolExecutor,ProcessPoolExecutor
-
 from datetime import datetime, time, date
 from django.db import transaction
 from django.http import JsonResponse
